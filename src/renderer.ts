@@ -30,6 +30,7 @@ let currentMode: 'select' | 'pan' | 'draw' = 'select';
 let drawingBox: { startX: number; startY: number } | null = null;
 let selectedBoxId: string | null = null;
 let resizingBox: { id: string; handle: string } | null = null;
+let previousModeForMiddleMouse: 'select' | 'pan' | 'draw' | null = null;
 
 // Initialize the application
 function init() {
@@ -413,6 +414,15 @@ function handleCanvasMouseDown(e: MouseEvent) {
   const mouseX = e.clientX - rect.left;
   const mouseY = e.clientY - rect.top;
 
+  // Middle mouse button for pan (regardless of current mode)
+  if (e.button === 1) {
+    previousModeForMiddleMouse = currentMode;
+    currentMode = 'pan';
+    isDragging = true;
+    dragStart = { x: mouseX - offsetX, y: mouseY - offsetY };
+    return;
+  }
+
   if (currentMode === 'pan') {
     isDragging = true;
     dragStart = { x: mouseX - offsetX, y: mouseY - offsetY };
@@ -452,6 +462,7 @@ function handleCanvasMouseMove(e: MouseEvent) {
     if (currentMode === 'pan') {
       offsetX = mouseX - dragStart.x;
       offsetY = mouseY - dragStart.y;
+      constrainOffsets();
       renderCanvas();
     } else if (currentMode === 'select' && resizingBox) {
       // Resize box
@@ -512,17 +523,48 @@ function handleCanvasMouseUp(e: MouseEvent) {
 
   isDragging = false;
   resizingBox = null;
+
+  // Restore previous mode if middle mouse pan was used
+  if (previousModeForMiddleMouse) {
+    currentMode = previousModeForMiddleMouse;
+    previousModeForMiddleMouse = null;
+    // Update button states
+    document.getElementById('pan-mode-btn')!.classList.toggle('btn-active', currentMode === 'pan');
+    document.getElementById('select-mode-btn')!.classList.toggle('btn-active', currentMode === 'select');
+    document.getElementById('draw-mode-btn')!.classList.toggle('btn-active', currentMode === 'draw');
+    canvas.classList.toggle('pan-mode', currentMode === 'pan');
+  }
+
   renderCanvas();
 }
 
-// Canvas wheel handler (zoom)
+// Canvas wheel handler (pan/zoom)
 function handleCanvasWheel(e: WheelEvent) {
   e.preventDefault();
-  
-  if (e.deltaY < 0) {
-    zoomIn();
+
+  const panSpeed = 50; // Adjust this value to control pan speed
+
+  if (e.ctrlKey) {
+    // Ctrl + wheel => zoom centered around mouse
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (e.deltaY < 0) {
+      zoomIn(mouseX, mouseY);
+    } else {
+      zoomOut(mouseX, mouseY);
+    }
+  } else if (e.shiftKey) {
+    // Shift + wheel => pan horizontally
+    offsetX += e.deltaY > 0 ? panSpeed : -panSpeed;
+    constrainOffsets();
+    renderCanvas();
   } else {
-    zoomOut();
+    // Default wheel => pan vertically
+    offsetY += e.deltaY > 0 ? panSpeed : -panSpeed;
+    constrainOffsets();
+    renderCanvas();
   }
 }
 
@@ -801,16 +843,88 @@ function setMode(mode: 'select' | 'pan' | 'draw') {
 }
 
 // Zoom functions
-function zoomIn() {
-  scale = Math.min(scale * 1.2, 10);
+function zoomIn(mouseX?: number, mouseY?: number) {
+  zoomAtPoint(1.2, mouseX, mouseY);
+}
+
+function zoomOut(mouseX?: number, mouseY?: number) {
+  zoomAtPoint(1/1.2, mouseX, mouseY);
+}
+
+function zoomAtPoint(scaleFactor: number, mouseX?: number, mouseY?: number) {
+  if (!currentImage) return;
+
+  const oldScale = scale;
+  const newScale = Math.max(0.1, Math.min(10, oldScale * scaleFactor));
+
+  if (mouseX !== undefined && mouseY !== undefined) {
+    // Calculate image position under mouse before zoom
+    const imgWidth = currentImage.width * oldScale;
+    const imgHeight = currentImage.height * oldScale;
+    const imgX = offsetX + (canvas.width - imgWidth) / 2;
+    const imgY = offsetY + (canvas.height - imgHeight) / 2;
+
+    const imageX = (mouseX - imgX) / oldScale;
+    const imageY = (mouseY - imgY) / oldScale;
+
+    // Apply zoom
+    scale = newScale;
+
+    // Calculate new image position
+    const newImgWidth = currentImage.width * newScale;
+    const newImgHeight = currentImage.height * newScale;
+    const newImgX = (canvas.width - newImgWidth) / 2;
+    const newImgY = (canvas.height - newImgHeight) / 2;
+
+    // Adjust offset so mouse stays over same image point
+    offsetX = mouseX - (newImgX + imageX * newScale);
+    offsetY = mouseY - (newImgY + imageY * newScale);
+  } else {
+    scale = newScale;
+  }
+
+  constrainOffsets();
   document.getElementById('zoom-level')!.textContent = Math.round(scale * 100) + '%';
   renderCanvas();
 }
 
-function zoomOut() {
-  scale = Math.max(scale / 1.2, 0.1);
-  document.getElementById('zoom-level')!.textContent = Math.round(scale * 100) + '%';
-  renderCanvas();
+function constrainOffsets() {
+  if (!currentImage) return;
+
+  const imgWidth = currentImage.width * scale;
+  const imgHeight = currentImage.height * scale;
+
+  // Calculate image bounds on canvas
+  const imgLeft = offsetX + (canvas.width - imgWidth) / 2;
+  const imgTop = offsetY + (canvas.height - imgHeight) / 2;
+  const imgRight = imgLeft + imgWidth;
+  const imgBottom = imgTop + imgHeight;
+
+  // Ensure at least some part of the image is visible
+  // We want to keep at least a small portion (e.g., 50px) of the image visible
+  const minVisible = 50;
+
+  // Constrain horizontal position
+  if (imgWidth > minVisible) {
+    if (imgRight < minVisible) {
+      // Image is too far left, bring right edge into view
+      offsetX += minVisible - imgRight;
+    } else if (imgLeft > canvas.width - minVisible) {
+      // Image is too far right, bring left edge into view
+      offsetX -= imgLeft - (canvas.width - minVisible);
+    }
+  }
+
+  // Constrain vertical position
+  if (imgHeight > minVisible) {
+    if (imgBottom < minVisible) {
+      // Image is too far up, bring bottom edge into view
+      offsetY += minVisible - imgBottom;
+    } else if (imgTop > canvas.height - minVisible) {
+      // Image is too far down, bring top edge into view
+      offsetY -= imgTop - (canvas.height - minVisible);
+    }
+  }
 }
 
 function fitToScreen() {
@@ -1062,6 +1176,13 @@ function handleKeyDown(e: KeyboardEvent) {
     closeBoxEditor();
     loadCurrentImage();
     updateUI();
+  }
+  // Mode shortcuts
+  else if (e.key === 'p') {
+    setMode('pan');
+  }
+  else if (e.key === 's') {
+    setMode('select');
   }
 }
 
