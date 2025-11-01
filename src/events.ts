@@ -294,6 +294,15 @@ export function handleBoxItemClick(boxId: string) {
 
 // Handle box delete from list
 export function handleBoxDeleteFromList(boxId: string) {
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  const box = imageData.boxes.find(b => b.id === boxId);
+  if (!box) return;
+
+  // Show confirmation dialog
+  if (!confirm(`Are you sure you want to delete the bounding box "${box.data || `Box ${imageData.boxes.findIndex(b => b.id === boxId) + 1}`}"?\n\nThis action cannot be undone.`)) return;
+
   selectBox(boxId);
   deleteSelectedBox();
   closeBoxEditor();
