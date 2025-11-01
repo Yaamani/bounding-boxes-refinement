@@ -74,7 +74,8 @@ export function setMode(mode: 'select' | 'pan' | 'draw') {
 
   // Update canvas cursor
   if (canvas) {
-    canvas.classList.toggle('pan-mode', mode === 'pan');
+    canvas.classList.remove('pan-mode', 'select-mode', 'draw-mode');
+    canvas.classList.add(`${mode}-mode`);
   }
 }
 

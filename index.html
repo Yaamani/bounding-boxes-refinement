@@ -33,6 +33,15 @@
         grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
       }
+      .pan-mode {
+        cursor: grab !important;
+      }
+      .select-mode {
+        cursor: default !important;
+      }
+      .draw-mode {
+        cursor: crosshair !important;
+      }
     </style>
   </head>
   <body>
@@ -101,7 +110,7 @@
           </button>
         </div>
         <div id="canvas-container">
-          <canvas id="main-canvas"></canvas>
+          <canvas id="main-canvas" class="select-mode"></canvas>
         </div>
       </div>
 
