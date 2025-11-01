@@ -66,13 +66,6 @@ function setupEventListeners() {
   document.getElementById('pan-mode-btn')!.addEventListener('click', () => setMode('pan'));
   document.getElementById('select-mode-btn')!.addEventListener('click', () => setMode('select'));
   document.getElementById('draw-mode-btn')!.addEventListener('click', () => setMode('draw'));
-  document.getElementById('delete-box-btn')!.addEventListener('click', () => {
-    deleteSelectedBox();
-    closeBoxEditor();
-    updateBoxList();
-    renderCanvas(appState);
-    updateUI();
-  });
 
   // Canvas events
   const canvas = document.getElementById('main-canvas') as HTMLCanvasElement;

@@ -7,7 +7,6 @@ export function updateUI() {
   // Update menu buttons
   (document.getElementById('save-btn') as HTMLButtonElement).disabled = !hasProject;
   (document.getElementById('save-as-btn') as HTMLButtonElement).disabled = !hasProject;
-  (document.getElementById('delete-box-btn') as HTMLButtonElement).disabled = !selectedBoxId;
 
   // Update project status
   const statusText = hasProject
