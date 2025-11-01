@@ -37,8 +37,40 @@ function init() {
   ctx = canvas.getContext('2d')!;
 
   console.log('renderer init — electronAPI present:', !!(window as any).electronAPI);
+  // ensure canvas matches container size on startup
+  resizeCanvasToContainer();
+
   setupEventListeners();
   updateUI();
+  // Update canvas size when window resizes
+  window.addEventListener('resize', () => {
+    resizeCanvasToContainer();
+  });
+}
+
+// Resize canvas element to fill the available container space (does NOT change image scale)
+function resizeCanvasToContainer() {
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  if (!container) return;
+
+  // Compute canvas width as viewport width minus left and right sidebar widths
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+  const leftSidebar = document.getElementById('left-sidebar');
+  const rightSidebar = document.getElementById('right-sidebar');
+  const leftWidth = leftSidebar ? leftSidebar.offsetWidth : 0;
+  const rightWidth = rightSidebar ? rightSidebar.offsetWidth : 0;
+  const containerWidth = Math.max(0, viewportWidth - leftWidth - rightWidth);
+
+  // Height: use the canvas parent's height (toolbar and other chrome handled elsewhere)
+  const containerHeight = container.clientHeight;
+
+  // Resize canvas to match calculated dimensions
+  canvas.width = containerWidth;
+  canvas.height = containerHeight;
+
+  // Re-render to reflect new size
+  renderCanvas();
 }
 
 // Setup all event listeners
@@ -284,7 +316,9 @@ async function loadCurrentImage() {
   currentImage = new Image();
   
   currentImage.onload = () => {
-    fitToScreen();
+    // Resize canvas to container so canvas matches available space.
+    // Do NOT change image scale here — user triggers fit via the toolbar.
+    resizeCanvasToContainer();
     renderCanvas();
   };
 
@@ -757,10 +791,10 @@ function handleAddBox() {
 function setMode(mode: 'select' | 'pan' | 'draw') {
   currentMode = mode;
 
-  // Update button states
-  document.getElementById('pan-mode-btn')!.classList.toggle('active', mode === 'pan');
-  document.getElementById('select-mode-btn')!.classList.toggle('active', mode === 'select');
-  document.getElementById('draw-mode-btn')!.classList.toggle('active', mode === 'draw');
+  // Update button states with DaisyUI btn-active class
+  document.getElementById('pan-mode-btn')!.classList.toggle('btn-active', mode === 'pan');
+  document.getElementById('select-mode-btn')!.classList.toggle('btn-active', mode === 'select');
+  document.getElementById('draw-mode-btn')!.classList.toggle('btn-active', mode === 'draw');
 
   // Update canvas cursor
   canvas.classList.toggle('pan-mode', mode === 'pan');
@@ -780,18 +814,19 @@ function zoomOut() {
 }
 
 function fitToScreen() {
-  if (!currentImage) return;
+  if (!currentImage || !canvas) return;
 
-  const containerWidth = canvas.parentElement!.clientWidth;
-  const containerHeight = canvas.parentElement!.clientHeight - 40; // Subtract toolbar height
-
-  canvas.width = containerWidth;
-  canvas.height = containerHeight;
+  // Compute scale to fit the image into the current canvas size (do not resize canvas here)
+  const container = canvas.parentElement;
+  if (!container) return;
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
 
   const scaleX = containerWidth / currentImage.width;
   const scaleY = containerHeight / currentImage.height;
   scale = Math.min(scaleX, scaleY, 1) * 0.9; // 90% to add some padding
 
+  // Reset panning offsets so image is centered
   offsetX = 0;
   offsetY = 0;
 
@@ -832,9 +867,9 @@ function updateImageList() {
     }
 
     const item = document.createElement('div');
-    item.className = 'list-item';
+    item.className = 'btn btn-soft justify-start w-full mb-1 h-min text-start wrap-anywhere';
     if (index === appState.currentImageIndex) {
-      item.classList.add('active');
+      item.classList.add('btn-active');
     }
     item.textContent = image.fileName;
     item.title = image.fileName;
@@ -861,21 +896,21 @@ function updateBoxList() {
 
   imageData.boxes.forEach((box, index) => {
     const item = document.createElement('div');
-    item.className = 'list-item box-item';
+    item.className = 'card bg-base-100 shadow-sm mb-2 hover:shadow-md transition-shadow';
     if (box.isSelected) {
-      item.classList.add('active');
+      item.classList.add('ring', 'ring-primary');
     }
 
     const content = document.createElement('div');
-    content.className = 'box-item-content';
+    content.className = 'card-body p-3';
 
     const label = document.createElement('div');
-    label.className = 'box-item-label';
+    label.className = 'card-title text-sm';
     label.textContent = box.data || `Box ${index + 1}`;
     label.title = box.data;
 
     const coord = document.createElement('div');
-    coord.className = 'box-item-coord';
+    coord.className = 'text-xs opacity-70';
     const [x1, y1, x2, y2] = box.coordinate;
     coord.textContent = `(${Math.round(x1)}, ${Math.round(y1)}) - (${Math.round(x2)}, ${Math.round(y2)})`;
 
@@ -883,10 +918,10 @@ function updateBoxList() {
     content.appendChild(coord);
 
     const actions = document.createElement('div');
-    actions.className = 'box-item-actions';
+    actions.className = 'card-actions justify-end mt-2';
 
     const editBtn = document.createElement('button');
-    editBtn.className = 'box-item-btn';
+    editBtn.className = 'btn btn-xs btn-primary';
     editBtn.textContent = '✏️';
     editBtn.title = 'Edit';
     editBtn.addEventListener('click', (e) => {
@@ -895,7 +930,7 @@ function updateBoxList() {
     });
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'box-item-btn';
+    deleteBtn.className = 'btn btn-xs btn-error';
     deleteBtn.textContent = '🗑️';
     deleteBtn.title = 'Delete';
     deleteBtn.addEventListener('click', (e) => {
@@ -907,8 +942,8 @@ function updateBoxList() {
     actions.appendChild(editBtn);
     actions.appendChild(deleteBtn);
 
+    content.appendChild(actions);
     item.appendChild(content);
-    item.appendChild(actions);
 
     item.addEventListener('click', () => {
       selectBox(box.id);
@@ -985,7 +1020,8 @@ function markAsModified() {
 
 // Hide welcome screen
 function hideWelcomeScreen() {
-  document.getElementById('welcome-screen')!.classList.add('hidden');
+  const welcomeScreen = document.getElementById('welcome-screen')!;
+  welcomeScreen.style.display = 'none';
 }
 
 // Handle keyboard shortcuts

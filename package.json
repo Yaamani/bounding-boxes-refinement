@@ -5,18 +5,29 @@
   "description": "OCR Bounding Box Refinement Tool",
   "main": "build/main.js",
   "scripts": {
-  "build": "tsc && tsc -p tsconfig.preload.json",
+    "build": "tsc && tsc -p tsconfig.preload.json",
+    "build:css": "tailwindcss -i src/input.css -o public/output.css",
     "build:watch": "tsc --watch",
-    "start": "npm run build && electron .",
+    "start": "electron .",
+    "build-start": "yarn build:css && yarn build && yarn start",
     "dev": "tsc --watch & electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["electron", "ocr", "bounding-box", "annotation"],
+  "keywords": [
+    "electron",
+    "ocr",
+    "bounding-box",
+    "annotation"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^24.9.2",
+    "autoprefixer": "^10.4.21",
+    "daisyui": "^5.3.10",
     "electron": "^39.0.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.16",
     "typescript": "^5.9.3"
   }
 }
