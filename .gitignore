@@ -1,0 +1,45 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.pnp.*
+
+# Build output
+build/
+dist/
+
+# Production
+release/
+
+# TypeScript
+*.tsbuildinfo
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# Coverage
+coverage/
+
+# Misc
+*.local
+*.seed
+
+# Test data (optional: if you don't want to add test assets to repo)
+# test-data/

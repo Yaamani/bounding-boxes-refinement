@@ -1,0 +1,22 @@
+{
+  "name": "bounding-boxes-refinement",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OCR Bounding Box Refinement Tool",
+  "main": "build/main.js",
+  "scripts": {
+  "build": "tsc && tsc -p tsconfig.preload.json",
+    "build:watch": "tsc --watch",
+    "start": "npm run build && electron .",
+    "dev": "tsc --watch & electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["electron", "ocr", "bounding-box", "annotation"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "electron": "^39.0.0",
+    "typescript": "^5.9.3"
+  }
+}

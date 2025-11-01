@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data:"
+    />
+    <title>OCR Bounding Box Refinement</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Menu Bar -->
+    <div id="menu-bar">
+      <div class="menu-section">
+        <button id="new-project-btn" class="menu-btn">New Project</button>
+        <button id="open-project-btn" class="menu-btn">Open Project</button>
+        <button id="save-btn" class="menu-btn" disabled>Save</button>
+        <button id="save-as-btn" class="menu-btn" disabled>Save As</button>
+      </div>
+      <div class="menu-section">
+        <span id="project-status">No project loaded</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <!-- Left Sidebar - Image List -->
+      <div id="left-sidebar">
+        <div class="sidebar-header">
+          <h3>Images</h3>
+          <input type="text" id="image-search" placeholder="Search images..." />
+        </div>
+        <div id="image-list" class="list-container"></div>
+      </div>
+
+      <!-- Center - Canvas Area -->
+      <div id="canvas-area">
+        <div id="canvas-toolbar">
+          <button id="zoom-in-btn" class="tool-btn" title="Zoom In">🔍+</button>
+          <button id="zoom-out-btn" class="tool-btn" title="Zoom Out">🔍-</button>
+          <button id="zoom-fit-btn" class="tool-btn" title="Fit to Screen">⬜</button>
+          <span id="zoom-level">100%</span>
+          <div class="tool-divider"></div>
+          <button id="pan-mode-btn" class="tool-btn" title="Pan Mode">✋</button>
+          <button id="select-mode-btn" class="tool-btn active" title="Select Mode">🎯</button>
+          <button id="draw-mode-btn" class="tool-btn" title="Draw Box">➕</button>
+          <button id="delete-box-btn" class="tool-btn" title="Delete Selected" disabled>🗑️</button>
+        </div>
+        <div id="canvas-container">
+          <canvas id="main-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Right Sidebar - Bounding Boxes -->
+      <div id="right-sidebar">
+        <div class="sidebar-header">
+          <h3>Bounding Boxes</h3>
+          <button id="add-box-btn" class="add-btn">+ Add Box</button>
+        </div>
+        <div id="box-list" class="list-container"></div>
+        
+        <!-- Box Editor -->
+        <div id="box-editor" style="display: none;">
+          <div class="editor-header">
+            <h4>Edit Box</h4>
+            <button id="close-editor-btn" class="close-btn">✕</button>
+          </div>
+          <div class="editor-content">
+            <label>
+              Data/Label:
+              <textarea id="box-data-input" rows="3"></textarea>
+            </label>
+            <label>
+              Coordinates:
+              <div class="coordinate-inputs">
+                <input type="number" id="coord-x1" placeholder="X1" />
+                <input type="number" id="coord-y1" placeholder="Y1" />
+                <input type="number" id="coord-x2" placeholder="X2" />
+                <input type="number" id="coord-y2" placeholder="Y2" />
+              </div>
+            </label>
+            <button id="apply-box-btn" class="apply-btn">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+      <div class="welcome-content">
+        <h1>OCR Bounding Box Refinement</h1>
+        <p>Refine and edit OCR bounding boxes with ease</p>
+        <div class="welcome-actions">
+          <button id="welcome-new-btn" class="welcome-btn">
+            <span class="welcome-icon">📁</span>
+            <span>New Project</span>
+            <span class="welcome-desc">Select image and JSON folders</span>
+          </button>
+          <button id="welcome-open-btn" class="welcome-btn">
+            <span class="welcome-icon">📂</span>
+            <span>Open Project</span>
+            <span class="welcome-desc">Open a saved project file</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="build/renderer.js"></script>
+  </body>
+</html>

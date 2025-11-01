@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "./build",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+    ,"verbatimModuleSyntax": false,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src/preload.ts"
+  ]
+}
