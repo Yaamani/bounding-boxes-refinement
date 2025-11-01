@@ -34,6 +34,7 @@ export function updateImageList() {
 
     const item = document.createElement('div');
     item.className = 'btn btn-soft justify-start w-full mb-1 h-min text-start wrap-anywhere';
+    item.id = `image-${index}`;
     if (index === appState.currentImageIndex) {
       item.classList.add('btn-active');
     }
@@ -42,6 +43,12 @@ export function updateImageList() {
     // Event listener will be handled by delegation in renderer.ts
     listContainer.appendChild(item);
   });
+
+  // Scroll to current image if exists
+  const currentImageItem = document.getElementById(`image-${appState.currentImageIndex}`);
+  if (currentImageItem) {
+    currentImageItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 // Update box list
@@ -57,6 +64,7 @@ export function updateBoxList() {
   imageData.boxes.forEach((box, index) => {
     const item = document.createElement('div');
     item.className = 'card bg-base-100 shadow-sm mb-2 hover:shadow-md transition-shadow';
+    item.id = `box-${box.id}`;
     if (box.isSelected) {
       item.classList.add('ring', 'ring-primary');
     }
@@ -100,6 +108,14 @@ export function updateBoxList() {
 
     listContainer.appendChild(item);
   });
+
+  // Scroll to selected box if exists
+  if (selectedBoxId) {
+    const selectedItem = document.getElementById(`box-${selectedBoxId}`);
+    if (selectedItem) {
+      selectedItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
 }
 
 // Hide welcome screen
