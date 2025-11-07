@@ -1,4 +1,4 @@
-import type { BoundingBox } from './types.js';
+import type { BoundingBox } from "./types.js";
 import {
   canvas,
   ctx,
@@ -11,8 +11,8 @@ import {
   currentMode,
   setOffsetX,
   setOffsetY,
-  setScale
-} from './state.js';
+  setScale,
+} from "./state.js";
 
 // Render canvas
 export function renderCanvas(appState: any) {
@@ -40,8 +40,8 @@ export function renderCanvas(appState: any) {
   }
 
   // Draw drawing box
-  if (drawingBox && currentMode === 'draw') {
-    ctx.strokeStyle = '#00ff00';
+  if (drawingBox && currentMode === "draw") {
+    ctx.strokeStyle = "#00ff00";
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     const width = dragStart.x - drawingBox.startX;
@@ -52,7 +52,12 @@ export function renderCanvas(appState: any) {
 }
 
 // Draw a bounding box
-function drawBoundingBox(box: BoundingBox, imgX: number, imgY: number, imgScale: number) {
+function drawBoundingBox(
+  box: BoundingBox,
+  imgX: number,
+  imgY: number,
+  imgScale: number
+) {
   const [x1, y1, x2, y2] = box.coordinate;
   const canvasX1 = imgX + x1 * imgScale;
   const canvasY1 = imgY + y1 * imgScale;
@@ -60,32 +65,53 @@ function drawBoundingBox(box: BoundingBox, imgX: number, imgY: number, imgScale:
   const canvasY2 = imgY + y2 * imgScale;
 
   // Draw box
-  ctx.strokeStyle = box.isSelected ? '#00ff00' : '#ff0000';
+  ctx.strokeStyle = box.isSelected ? "#00ff00" : "#ff0000";
   ctx.lineWidth = box.isSelected ? 3 : 2;
   ctx.strokeRect(canvasX1, canvasY1, canvasX2 - canvasX1, canvasY2 - canvasY1);
 
   // Draw resize handles if selected
   if (box.isSelected) {
     const handleSize = 8;
-    ctx.fillStyle = '#00ff00';
+    ctx.fillStyle = "#00ff00";
     // Top-left
-    ctx.fillRect(canvasX1 - handleSize / 2, canvasY1 - handleSize / 2, handleSize, handleSize);
+    ctx.fillRect(
+      canvasX1 - handleSize / 2,
+      canvasY1 - handleSize / 2,
+      handleSize,
+      handleSize
+    );
     // Top-right
-    ctx.fillRect(canvasX2 - handleSize / 2, canvasY1 - handleSize / 2, handleSize, handleSize);
+    ctx.fillRect(
+      canvasX2 - handleSize / 2,
+      canvasY1 - handleSize / 2,
+      handleSize,
+      handleSize
+    );
     // Bottom-left
-    ctx.fillRect(canvasX1 - handleSize / 2, canvasY2 - handleSize / 2, handleSize, handleSize);
+    ctx.fillRect(
+      canvasX1 - handleSize / 2,
+      canvasY2 - handleSize / 2,
+      handleSize,
+      handleSize
+    );
     // Bottom-right
-    ctx.fillRect(canvasX2 - handleSize / 2, canvasY2 - handleSize / 2, handleSize, handleSize);
+    ctx.fillRect(
+      canvasX2 - handleSize / 2,
+      canvasY2 - handleSize / 2,
+      handleSize,
+      handleSize
+    );
   }
 
   // Draw label
   if (box.data) {
-    ctx.fillStyle = box.isSelected ? '#00ff00' : '#ff0000';
-    ctx.font = '12px sans-serif';
-    const text = box.data.substring(0, 20) + (box.data.length > 20 ? '...' : '');
+    ctx.fillStyle = box.isSelected ? "#00ff00" : "#ff0000";
+    ctx.font = "12px sans-serif";
+    const text =
+      box.data.substring(0, 20) + (box.data.length > 20 ? "..." : "");
     const textWidth = ctx.measureText(text).width;
     ctx.fillRect(canvasX1, canvasY1 - 18, textWidth + 8, 18);
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = "#000000";
     ctx.fillText(text, canvasX1 + 4, canvasY1 - 5);
   }
 }
@@ -97,9 +123,10 @@ export function resizeCanvasToContainer() {
   if (!container) return;
 
   // Compute canvas width as viewport width minus left and right sidebar widths
-  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-  const leftSidebar = document.getElementById('left-sidebar');
-  const rightSidebar = document.getElementById('right-sidebar');
+  const viewportWidth =
+    window.innerWidth || document.documentElement.clientWidth;
+  const leftSidebar = document.getElementById("left-sidebar");
+  const rightSidebar = document.getElementById("right-sidebar");
   const leftWidth = leftSidebar ? leftSidebar.offsetWidth : 0;
   const rightWidth = rightSidebar ? rightSidebar.offsetWidth : 0;
   const containerWidth = Math.max(0, viewportWidth - leftWidth - rightWidth);
@@ -154,7 +181,8 @@ function zoomAtPoint(scaleFactor: number, mouseX?: number, mouseY?: number) {
   }
 
   constrainOffsets();
-  document.getElementById('zoom-level')!.textContent = Math.round(newScale * 100) + '%';
+  document.getElementById("zoom-level")!.textContent =
+    Math.round(newScale * 100) + "%";
 }
 
 export function constrainOffsets() {
@@ -207,5 +235,58 @@ export function fitToScreen() {
   setOffsetX(0);
   setOffsetY(0);
 
-  document.getElementById('zoom-level')!.textContent = Math.round(newScale * 100) + '%';
+  document.getElementById("zoom-level")!.textContent =
+    Math.round(newScale * 100) + "%";
+}
+
+// Extract the image region inside a bounding box and return as a blob
+export async function extractBoundingBoxImage(
+  box: BoundingBox
+): Promise<Blob | null> {
+  if (!currentImage) return null;
+
+  const [x1, y1, x2, y2] = box.coordinate;
+  const width = x2 - x1;
+  const height = y2 - y1;
+
+  // Create an off-screen canvas for the extracted region
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext("2d");
+  if (!tempCtx) return null;
+
+  // Draw the extracted region from the original image
+  tempCtx.drawImage(
+    currentImage,
+    x1,
+    y1, // Source position (in image coordinates)
+    width,
+    height, // Source dimensions
+    0,
+    0, // Destination position
+    width,
+    height // Destination dimensions
+  );
+
+  // Convert canvas to blob
+  return new Promise((resolve) => {
+    tempCanvas.toBlob(
+      (blob) => {
+        resolve(blob);
+        // For debugging
+        // if (blob) {
+        //   const url = URL.createObjectURL(blob);
+        //   const a = document.createElement('a');
+        //   a.href = url;
+        //   a.download = `bounding-box-${Date.now()}.png`;
+        //   document.body.appendChild(a);
+        //   a.click();
+        //   document.body.removeChild(a);
+        //   URL.revokeObjectURL(url);
+        // }
+      },
+      "image/png"
+    );
+  });
 }

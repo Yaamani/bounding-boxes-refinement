@@ -140,6 +140,7 @@ function parseJsonFormat(data: any): BoundingBox[] {
         const poly = format1.rec_polys[i];
         if (poly) {
           const bbox = polygonToBoundingBox(poly);
+          // const bbox = polygonToBoundingBoxSimple(poly);
           const text = format1.rec_texts[i];
           boxes.push({
             id: generateId(),
@@ -167,6 +168,16 @@ function parseJsonFormat(data: any): BoundingBox[] {
   }
 
   return boxes;
+}
+
+// Get the first 4 coordinates of a polygon as bounding box
+function polygonToBoundingBoxSimple(poly: [number, number][]): [number, number, number, number] {
+  if (poly.length < 2) return [0, 0, 0, 0];
+  const x1 = poly[0]![0];
+  const y1 = poly[0]![1];
+  const x2 = poly[1]![0];
+  const y2 = poly[1]![1];
+  return [x1, y1, x2, y2];
 }
 
 // Convert polygon to bounding box

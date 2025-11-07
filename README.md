@@ -7,23 +7,27 @@ A desktop application built with Electron for refining and editing bounding boxe
 - **Multiple Input Formats**: Supports two JSON input formats
   - Format 1: OCR with polygons (`rec_texts` and `rec_polys`)
   - Format 2: Boxes with labels (`boxes` with `label` and `coordinate`)
-  
 - **Visual Canvas Editor**:
   - Draw new bounding boxes
   - Move existing boxes by dragging
   - Resize boxes using corner handles
   - Zoom in/out and pan around images
-  
 - **Image Management**:
   - Browse through multiple images
   - Search/filter images by name
   - Navigate with keyboard shortcuts (Arrow keys)
-  
 - **Box Editing**:
+
   - Edit box labels/data
   - Manually adjust coordinates
   - Delete unwanted boxes
   - View all boxes for current image
+
+- **OCR Integration**:
+
+  - Recognize text within bounding boxes using PaddleOCR server
+  - One-click text recognition with visual feedback
+  - Automatic label updates with recognized text
 
 - **Project Management**:
   - Create new projects from image and JSON folders
@@ -34,31 +38,35 @@ A desktop application built with Electron for refining and editing bounding boxe
 ## Installation
 
 1. Install dependencies:
+
    ```bash
-   npm install
+   yarn install
    ```
 
 2. Build the TypeScript files:
+
    ```bash
-   npm run build
+   yarn build
    ```
 
 3. Start the application:
    ```bash
-   npm start
+   yarn start
    ```
 
 ## Development
 
 Run in development mode with auto-rebuild:
+
 ```bash
-npm run dev
+yarn dev
 ```
 
 Or use separate terminals for watching and running:
+
 ```bash
-npm run build:watch  # Terminal 1
-npm start            # Terminal 2
+yarn build:watch  # Terminal 1
+yarn start            # Terminal 2
 ```
 
 ## Usage
@@ -93,6 +101,14 @@ npm start            # Terminal 2
 5. Click "Apply" to save changes
 6. Or use the delete button to remove the box
 
+### OCR Text Recognition
+
+1. Select a bounding box in the canvas or box list
+2. Click the 🔤 (OCR) button on the box card in the right sidebar
+3. The button will show ⏳ while processing
+4. Recognized text will automatically update the box label
+5. Requires PaddleOCR server running on localhost:5000
+
 ### Keyboard Shortcuts
 
 - **Ctrl/Cmd + S**: Save project
@@ -106,6 +122,7 @@ npm start            # Terminal 2
 - **Save As**: Choose a new location and filename
 
 The saved file format:
+
 ```json
 [
   {
@@ -123,6 +140,7 @@ The saved file format:
 ## Input JSON Formats
 
 ### Format 1: OCR with Polygons
+
 ```json
 {
   "input_path": "path/to/image.jpg",
@@ -135,6 +153,7 @@ The saved file format:
 ```
 
 ### Format 2: Boxes with Labels
+
 ```json
 {
   "input_path": "path/to/image.jpg",

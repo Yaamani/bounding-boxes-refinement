@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data:"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data:; connect-src 'self' http://192.168.1.197:5000"
     />
     <title>OCR Bounding Box Refinement</title>
     <link rel="stylesheet" type="text/css" href="public/output.css" />
@@ -49,60 +49,226 @@
     <div class="navbar bg-base-200 shadow-lg">
       <div class="navbar-start gap-2">
         <button id="new-project-btn" class="btn btn-sm btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
           New Project
         </button>
         <button id="open-project-btn" class="btn btn-sm btn-secondary">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+            />
+          </svg>
           Open
         </button>
-        <button id="save-btn" class="btn btn-sm btn-ghost" disabled title="Save (Ctrl+S)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+        <button
+          id="save-btn"
+          class="btn btn-sm btn-ghost"
+          disabled
+          title="Save (Ctrl+S)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+            />
+          </svg>
           Save
         </button>
-        <button id="save-as-btn" class="btn btn-sm btn-ghost" disabled title="Save As">Save As</button>
+        <button
+          id="save-as-btn"
+          class="btn btn-sm btn-ghost"
+          disabled
+          title="Save As"
+        >
+          Save As
+        </button>
       </div>
       <div class="navbar-end">
-        <span id="project-status" class="badge badge-ghost">No project loaded</span>
+        <span id="project-status" class="badge badge-ghost"
+          >No project loaded</span
+        >
       </div>
     </div>
 
     <!-- Main Content -->
     <div id="main-content" class="flex">
       <!-- Left Sidebar - Image List -->
-      <div id="left-sidebar" class="w-80 bg-base-200 border-r border-base-300 flex flex-col">
+      <div
+        id="left-sidebar"
+        class="w-80 bg-base-200 border-r border-base-300 flex flex-col"
+      >
         <div class="p-4 border-b border-base-300">
           <h3 class="text-lg font-bold mb-2">Images</h3>
-          <input type="text" id="image-search" placeholder="Search images..." class="input input-bordered input-sm w-full" />
+          <input
+            type="text"
+            id="image-search"
+            placeholder="Search images..."
+            class="input input-bordered input-sm w-full"
+          />
         </div>
         <div id="image-list" class="list-container p-2"></div>
       </div>
 
       <!-- Center - Canvas Area -->
       <div id="canvas-area" class="flex-1 flex flex-col bg-base-100">
-        <div id="canvas-toolbar" class="bg-base-200 border-b border-base-300 p-2 flex items-center gap-2">
+        <div
+          id="canvas-toolbar"
+          class="bg-base-200 border-b border-base-300 p-2 flex items-center gap-2"
+        >
           <div class="join">
-            <button id="zoom-in-btn" class="btn btn-sm join-item" title="Zoom In (Ctrl+Scroll)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+            <button
+              id="zoom-in-btn"
+              class="btn btn-sm join-item"
+              title="Zoom In (Ctrl+Scroll)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                />
+              </svg>
             </button>
-            <button id="zoom-out-btn" class="btn btn-sm join-item" title="Zoom Out (Ctrl+Scroll)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" /></svg>
+            <button
+              id="zoom-out-btn"
+              class="btn btn-sm join-item"
+              title="Zoom Out (Ctrl+Scroll)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
+                />
+              </svg>
             </button>
-            <button id="zoom-fit-btn" class="btn btn-sm join-item" title="Fit to Screen">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+            <button
+              id="zoom-fit-btn"
+              class="btn btn-sm join-item"
+              title="Fit to Screen"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                />
+              </svg>
             </button>
           </div>
           <span id="zoom-level" class="badge badge-ghost">100%</span>
           <div class="divider divider-horizontal"></div>
           <div class="join">
-            <button id="pan-mode-btn" class="btn btn-sm join-item" title="Pan Mode (P)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+            <button
+              id="pan-mode-btn"
+              class="btn btn-sm join-item"
+              title="Pan Mode (P)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
+                />
+              </svg>
             </button>
-            <button id="select-mode-btn" class="btn btn-sm join-item btn-active" title="Select Mode (S)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>
+            <button
+              id="select-mode-btn"
+              class="btn btn-sm join-item btn-active"
+              title="Select Mode (S)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+                />
+              </svg>
             </button>
-            <button id="draw-mode-btn" class="btn btn-sm join-item" title="Draw Box">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            <button
+              id="draw-mode-btn"
+              class="btn btn-sm join-item"
+              title="Draw Box"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
             </button>
           </div>
         </div>
@@ -112,22 +278,60 @@
       </div>
 
       <!-- Right Sidebar - Bounding Boxes -->
-      <div id="right-sidebar" class="w-80 bg-base-200 border-l border-base-300 flex flex-col">
-        <div class="p-4 border-b border-base-300 flex justify-between items-center">
+      <div
+        id="right-sidebar"
+        class="w-80 bg-base-200 border-l border-base-300 flex flex-col"
+      >
+        <div
+          class="p-4 border-b border-base-300 flex justify-between items-center"
+        >
           <h3 class="text-lg font-bold">Bounding Boxes</h3>
           <button id="add-box-btn" class="btn btn-sm btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
             Add Box
           </button>
         </div>
         <div id="box-list" class="list-container p-2"></div>
-        
+
         <!-- Box Editor -->
-        <div id="box-editor" class="border-t border-base-300 p-4" style="display: none;">
+        <div
+          id="box-editor"
+          class="border-t border-base-300 p-4"
+          style="display: none"
+        >
           <div class="flex justify-between items-center mb-4">
             <h4 class="text-lg font-semibold">Edit Box</h4>
-            <button id="close-editor-btn" class="btn btn-sm btn-circle btn-ghost">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button
+              id="close-editor-btn"
+              class="btn btn-sm btn-circle btn-ghost"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
           </div>
           <div class="space-y-4">
@@ -135,41 +339,103 @@
               <label class="label">
                 <span class="label-text">Data/Label:</span>
               </label>
-              <textarea id="box-data-input" rows="3" class="textarea textarea-bordered"></textarea>
+              <textarea
+                id="box-data-input"
+                rows="3"
+                class="textarea textarea-bordered"
+              ></textarea>
             </div>
             <div class="form-control">
               <label class="label">
                 <span class="label-text">Coordinates:</span>
               </label>
               <div class="coordinate-inputs">
-                <input type="number" id="coord-x1" placeholder="X1" class="input input-bordered input-sm" />
-                <input type="number" id="coord-y1" placeholder="Y1" class="input input-bordered input-sm" />
-                <input type="number" id="coord-x2" placeholder="X2" class="input input-bordered input-sm" />
-                <input type="number" id="coord-y2" placeholder="Y2" class="input input-bordered input-sm" />
+                <input
+                  type="number"
+                  id="coord-x1"
+                  placeholder="X1"
+                  class="input input-bordered input-sm"
+                />
+                <input
+                  type="number"
+                  id="coord-y1"
+                  placeholder="Y1"
+                  class="input input-bordered input-sm"
+                />
+                <input
+                  type="number"
+                  id="coord-x2"
+                  placeholder="X2"
+                  class="input input-bordered input-sm"
+                />
+                <input
+                  type="number"
+                  id="coord-y2"
+                  placeholder="Y2"
+                  class="input input-bordered input-sm"
+                />
               </div>
             </div>
-            <button id="apply-box-btn" class="btn btn-primary w-full">Apply Changes</button>
+            <button id="apply-box-btn" class="btn btn-primary w-full">
+              Apply Changes
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Welcome Screen -->
-    <div id="welcome-screen" class="hero min-h-screen bg-base-200 absolute inset-0 z-50">
+    <div
+      id="welcome-screen"
+      class="hero min-h-screen bg-base-200 absolute inset-0 z-50"
+    >
       <div class="hero-content text-center">
         <div class="max-w-md">
           <h1 class="text-5xl font-bold mb-4">OCR Bounding Box Refinement</h1>
-          <p class="py-6 text-lg">Refine and edit OCR bounding boxes with ease</p>
+          <p class="py-6 text-lg">
+            Refine and edit OCR bounding boxes with ease
+          </p>
           <div class="flex flex-col gap-4">
             <button id="welcome-new-btn" class="btn btn-primary btn-lg gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
               <div class="text-left">
                 <div class="font-bold">New Project</div>
-                <div class="text-xs opacity-70">Select image and JSON folders</div>
+                <div class="text-xs opacity-70">
+                  Select image and JSON folders
+                </div>
               </div>
             </button>
-            <button id="welcome-open-btn" class="btn btn-secondary btn-lg gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+            <button
+              id="welcome-open-btn"
+              class="btn btn-secondary btn-lg gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+                />
+              </svg>
               <div class="text-left">
                 <div class="font-bold">Open Project</div>
                 <div class="text-xs opacity-70">Open a saved project file</div>

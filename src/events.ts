@@ -20,10 +20,16 @@ import {
   setDrawingBox,
   setResizingBox,
   setPreviousModeForMiddleMouse,
-  setMode
-} from './state.js';
-import { renderCanvas, constrainOffsets, zoomIn, zoomOut } from './canvas.js';
-import { loadCurrentImage, handleSave } from './project.js';
+  setMode,
+} from "./state.js";
+import {
+  renderCanvas,
+  constrainOffsets,
+  zoomIn,
+  zoomOut,
+  extractBoundingBoxImage,
+} from "./canvas.js";
+import { loadCurrentImage, handleSave } from "./project.js";
 import {
   getBoxAtPosition,
   getResizeHandle,
@@ -35,9 +41,10 @@ import {
   deleteSelectedBox,
   showBoxEditor,
   closeBoxEditor,
-  applyBoxEdit
-} from './boxes.js';
-import { updateUI, updateBoxList, updateImageList } from './ui.js';
+  applyBoxEdit,
+} from "./boxes.js";
+import { updateUI, updateBoxList, updateImageList } from "./ui.js";
+import { recognizeTextFromImage } from "./ocr.js";
 
 // Canvas mouse down handler
 export function handleCanvasMouseDown(e: MouseEvent) {
@@ -48,16 +55,16 @@ export function handleCanvasMouseDown(e: MouseEvent) {
   // Middle mouse button for pan (regardless of current mode)
   if (e.button === 1) {
     setPreviousModeForMiddleMouse(currentMode);
-    setCurrentMode('pan');
+    setCurrentMode("pan");
     setIsDragging(true);
     setDragStart(mouseX - offsetX, mouseY - offsetY);
     return;
   }
 
-  if (currentMode === 'pan') {
+  if (currentMode === "pan") {
     setIsDragging(true);
     setDragStart(mouseX - offsetX, mouseY - offsetY);
-  } else if (currentMode === 'select') {
+  } else if (currentMode === "select") {
     // Check if clicking on a resize handle
     const handle = getResizeHandle(mouseX, mouseY);
     if (handle) {
@@ -81,7 +88,7 @@ export function handleCanvasMouseDown(e: MouseEvent) {
         renderCanvas(appState);
       }
     }
-  } else if (currentMode === 'draw') {
+  } else if (currentMode === "draw") {
     setIsDragging(true);
     setDrawingBox({ startX: mouseX, startY: mouseY });
     setDragStart(mouseX, mouseY);
@@ -95,12 +102,12 @@ export function handleCanvasMouseMove(e: MouseEvent) {
   const mouseY = e.clientY - rect.top;
 
   if (isDragging) {
-    if (currentMode === 'pan') {
+    if (currentMode === "pan") {
       setOffsetX(mouseX - dragStart.x);
       setOffsetY(mouseY - dragStart.y);
       constrainOffsets();
       renderCanvas(appState);
-    } else if (currentMode === 'select' && resizingBox) {
+    } else if (currentMode === "select" && resizingBox) {
       // Resize box
       const deltaX = mouseX - dragStart.x;
       const deltaY = mouseY - dragStart.y;
@@ -108,7 +115,7 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
       updateBoxList();
-    } else if (currentMode === 'select' && selectedBoxId) {
+    } else if (currentMode === "select" && selectedBoxId) {
       // Move box
       const deltaX = mouseX - dragStart.x;
       const deltaY = mouseY - dragStart.y;
@@ -116,7 +123,7 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
       updateBoxList();
-    } else if (currentMode === 'draw') {
+    } else if (currentMode === "draw") {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
     }
@@ -125,7 +132,7 @@ export function handleCanvasMouseMove(e: MouseEvent) {
 
 // Canvas mouse up handler
 export function handleCanvasMouseUp(e: MouseEvent) {
-  if (currentMode === 'draw' && drawingBox) {
+  if (currentMode === "draw" && drawingBox) {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -173,10 +180,16 @@ export function handleCanvasMouseUp(e: MouseEvent) {
     setCurrentMode(previousModeForMiddleMouse);
     setPreviousModeForMiddleMouse(null);
     // Update button states
-    document.getElementById('pan-mode-btn')!.classList.toggle('btn-active', currentMode === 'pan');
-    document.getElementById('select-mode-btn')!.classList.toggle('btn-active', currentMode === 'select');
-    document.getElementById('draw-mode-btn')!.classList.toggle('btn-active', currentMode === 'draw');
-    canvas.classList.toggle('pan-mode', currentMode === 'pan');
+    document
+      .getElementById("pan-mode-btn")!
+      .classList.toggle("btn-active", currentMode === "pan");
+    document
+      .getElementById("select-mode-btn")!
+      .classList.toggle("btn-active", currentMode === "select");
+    document
+      .getElementById("draw-mode-btn")!
+      .classList.toggle("btn-active", currentMode === "draw");
+    canvas.classList.toggle("pan-mode", currentMode === "pan");
   }
 
   renderCanvas(appState);
@@ -202,7 +215,7 @@ export function handleCanvasWheel(e: WheelEvent) {
     renderCanvas(appState);
   } else if (e.shiftKey) {
     // Shift + wheel => pan horizontally
-    setOffsetX(offsetX + (e.deltaY > 0 ? panSpeed : -panSpeed));
+    setOffsetX(offsetX + (e.deltaY > 0 ? -panSpeed : panSpeed));
     constrainOffsets();
     renderCanvas(appState);
   } else {
@@ -221,16 +234,16 @@ export function handleImageSearch() {
 // Handle keyboard shortcuts
 export function handleKeyDown(e: KeyboardEvent) {
   // Delete key
-  if (e.key === 'Delete' && selectedBoxId) {
+  if (e.key === "Delete" && selectedBoxId) {
     deleteSelectedBox();
     closeBoxEditor();
     updateBoxList();
     renderCanvas(appState);
   }
   // Escape key
-  else if (e.key === 'Escape') {
-    if (currentMode === 'draw') {
-      setMode('select');
+  else if (e.key === "Escape") {
+    if (currentMode === "draw") {
+      setMode("select");
       setDrawingBox(null);
       renderCanvas(appState);
     } else {
@@ -241,14 +254,14 @@ export function handleKeyDown(e: KeyboardEvent) {
     }
   }
   // Ctrl+S or Cmd+S for save
-  else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+  else if ((e.ctrlKey || e.metaKey) && e.key === "s") {
     e.preventDefault();
     if (appState.images.length > 0) {
       handleSave();
     }
   }
   // Arrow keys for navigation
-  else if (e.key === 'ArrowLeft' && appState.currentImageIndex > 0) {
+  else if (e.key === "ArrowLeft" && appState.currentImageIndex > 0) {
     appState.currentImageIndex--;
     deselectAllBoxes();
     closeBoxEditor();
@@ -256,7 +269,10 @@ export function handleKeyDown(e: KeyboardEvent) {
       renderCanvas(appState);
     });
     updateUI();
-  } else if (e.key === 'ArrowRight' && appState.currentImageIndex < appState.images.length - 1) {
+  } else if (
+    e.key === "ArrowRight" &&
+    appState.currentImageIndex < appState.images.length - 1
+  ) {
     appState.currentImageIndex++;
     deselectAllBoxes();
     closeBoxEditor();
@@ -266,10 +282,10 @@ export function handleKeyDown(e: KeyboardEvent) {
     updateUI();
   }
   // Mode shortcuts
-  else if (e.key === 'p') {
-    setMode('pan');
-  } else if (e.key === 's' && !e.ctrlKey && !e.metaKey) {
-    setMode('select');
+  else if (e.key === "p") {
+    setMode("pan");
+  } else if (e.key === "s" && !e.ctrlKey && !e.metaKey) {
+    setMode("select");
   }
 }
 
@@ -297,11 +313,19 @@ export function handleBoxDeleteFromList(boxId: string) {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  const box = imageData.boxes.find(b => b.id === boxId);
+  const box = imageData.boxes.find((b) => b.id === boxId);
   if (!box) return;
 
   // Show confirmation dialog
-  if (!confirm(`Are you sure you want to delete the bounding box "${box.data || `Box ${imageData.boxes.findIndex(b => b.id === boxId) + 1}`}"?\n\nThis action cannot be undone.`)) return;
+  if (
+    !confirm(
+      `Are you sure you want to delete the bounding box "${
+        box.data ||
+        `Box ${imageData.boxes.findIndex((b) => b.id === boxId) + 1}`
+      }"?\n\nThis action cannot be undone.`
+    )
+  )
+    return;
 
   selectBox(boxId);
   deleteSelectedBox();
@@ -317,12 +341,80 @@ export function handleApplyBoxEdit() {
   renderCanvas(appState);
 }
 
+// Handle OCR recognition for a box
+export async function handleBoxOCR(boxId: string) {
+  if (appState.currentImageIndex < 0) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  const box = imageData.boxes.find((b) => b.id === boxId);
+  if (!box || !currentImage) return;
+
+  // Show loading state
+  const ocrBtn = document.querySelector(
+    `.ocr-btn[data-box-id="${boxId}"]`
+  ) as HTMLButtonElement;
+  if (ocrBtn) {
+    ocrBtn.disabled = true;
+    ocrBtn.textContent = "⏳";
+    ocrBtn.title = "Recognizing text...";
+  }
+
+  try {
+    // Extract the bounding box image
+    const imageBlob = await extractBoundingBoxImage(box);
+    if (!imageBlob) {
+      throw new Error("Failed to extract bounding box image");
+    }
+
+    // Send to OCR server
+    const recognizedText = await recognizeTextFromImage(imageBlob);
+
+    if (recognizedText) {
+      // Update the box data with recognized text
+      box.data = recognizedText;
+      appState.isModified = true;
+
+      // Update UI
+      updateBoxList();
+      renderCanvas(appState);
+
+      // Show success message
+      if (ocrBtn) {
+        ocrBtn.textContent = "✅";
+        ocrBtn.title = "Text recognized successfully!";
+        setTimeout(() => {
+          ocrBtn.textContent = "🔤";
+          ocrBtn.title = "Recognize text with OCR";
+        }, 2000);
+      }
+    } else {
+      throw new Error("No text recognized in image");
+    }
+  } catch (error) {
+    console.error("OCR error:", error);
+    alert(
+      `OCR failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }\n\nMake sure the PaddleOCR server is running`
+    );
+  } finally {
+    // Reset button state
+    if (ocrBtn && ocrBtn.textContent !== "✅") {
+      ocrBtn.disabled = false;
+      ocrBtn.textContent = "🔤";
+      ocrBtn.title = "Recognize text with OCR";
+    }
+  }
+}
+
 // Setup delegated event listeners for dynamically created elements
 export function setupDelegatedEventListeners() {
   // Image list click delegation
-  document.getElementById('image-list')!.addEventListener('click', (e) => {
+  document.getElementById("image-list")!.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
-    const item = target.closest('.btn');
+    const item = target.closest(".btn");
     if (item) {
       const index = Array.from(item.parentElement!.children).indexOf(item);
       if (index >= 0) {
@@ -332,13 +424,16 @@ export function setupDelegatedEventListeners() {
   });
 
   // Box list click delegation
-  document.getElementById('box-list')!.addEventListener('click', (e) => {
+  document.getElementById("box-list")!.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
-    
+
     // Handle edit button
-    if (target.classList.contains('btn-primary') || target.textContent === '✏️') {
+    if (
+      target.classList.contains("btn-primary") ||
+      target.textContent === "✏️"
+    ) {
       e.stopPropagation();
-      const card = target.closest('.card');
+      const card = target.closest(".card");
       if (card) {
         const index = Array.from(card.parentElement!.children).indexOf(card);
         if (index >= 0 && appState.currentImageIndex >= 0) {
@@ -350,11 +445,26 @@ export function setupDelegatedEventListeners() {
       }
       return;
     }
-    
-    // Handle delete button
-    if (target.classList.contains('btn-error') || target.textContent === '🗑️') {
+
+    // Handle OCR button
+    if (
+      target.classList.contains("ocr-btn") ||
+      target.textContent === "🔤" ||
+      target.textContent === "⏳" ||
+      target.textContent === "✅"
+    ) {
       e.stopPropagation();
-      const card = target.closest('.card');
+      const boxId = target.getAttribute("data-box-id");
+      if (boxId) {
+        handleBoxOCR(boxId);
+      }
+      return;
+    }
+
+    // Handle delete button
+    if (target.classList.contains("btn-error") || target.textContent === "🗑️") {
+      e.stopPropagation();
+      const card = target.closest(".card");
       if (card) {
         const index = Array.from(card.parentElement!.children).indexOf(card);
         if (index >= 0 && appState.currentImageIndex >= 0) {
@@ -366,9 +476,9 @@ export function setupDelegatedEventListeners() {
       }
       return;
     }
-    
+
     // Handle card click
-    const card = target.closest('.card');
+    const card = target.closest(".card");
     if (card) {
       const index = Array.from(card.parentElement!.children).indexOf(card);
       if (index >= 0 && appState.currentImageIndex >= 0) {
@@ -380,4 +490,3 @@ export function setupDelegatedEventListeners() {
     }
   });
 }
-
