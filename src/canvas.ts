@@ -81,7 +81,7 @@ function drawBoundingBox(
     ctx.strokeStyle = isPortrait ? "#0099ff" : "#ff0000"; // Blue for portrait (height > width), Red for landscape
   }
 
-  // Use thicker line width for colliding boxes
+// Use thicker line width for colliding boxes
   if (hasBoxCollision) {
     ctx.lineWidth = box.isSelected ? 10 : 7;
   } else {
@@ -93,6 +93,7 @@ function drawBoundingBox(
   // Draw resize handles if selected
   if (box.isSelected) {
     const handleSize = hasBoxCollision ? 15 : 10;
+    ctx.fillStyle = "#00ff00";
     ctx.fillStyle = "#00ff00";
     ctx.fillStyle = "#00ff00";
     // Top-left

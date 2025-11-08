@@ -119,8 +119,6 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       resizeBox(resizingBox.id, resizingBox.handle, deltaX, deltaY);
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
-      updateBoxList();
-      updateCoordinateFields(resizingBox.id);
     } else if (currentMode === "select" && selectedBoxId) {
       // Move box
       const deltaX = mouseX - dragStart.x;
@@ -128,8 +126,6 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       moveBox(selectedBoxId, deltaX, deltaY);
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
-      updateBoxList();
-      updateCoordinateFields(selectedBoxId);
     } else if (currentMode === "draw") {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
@@ -180,6 +176,16 @@ export function handleCanvasMouseUp(e: MouseEvent) {
   }
 
   setIsDragging(false);
+
+  // Update coordinate fields only after resize/move is complete
+  if (resizingBox) {
+    updateBoxList();
+    updateCoordinateFields(resizingBox.id);
+  } else if (selectedBoxId) {
+    updateBoxList();
+    updateCoordinateFields(selectedBoxId);
+  }
+
   setResizingBox(null);
 
   // Restore previous mode if middle mouse pan was used
