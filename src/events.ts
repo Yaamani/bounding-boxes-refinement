@@ -169,6 +169,8 @@ export function handleCanvasMouseUp(e: MouseEvent) {
           }
         }
         updateBoxList();
+        // Switch to select mode after drawing a box
+        setMode("select");
       }
     }
 
