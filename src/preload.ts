@@ -1,14 +1,23 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from "electron";
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  selectImageFolder: () => ipcRenderer.invoke('select-image-folder'),
-  selectJsonFolders: () => ipcRenderer.invoke('select-json-folders'),
-  selectSaveFile: () => ipcRenderer.invoke('select-save-file'),
-  selectOpenFile: () => ipcRenderer.invoke('select-open-file'),
-  readDirectory: (dirPath: string) => ipcRenderer.invoke('read-directory', dirPath),
-  readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
-  writeFile: (filePath: string, content: string) => ipcRenderer.invoke('write-file', filePath, content),
-  pathJoin: (...paths: string[]) => ipcRenderer.invoke('path-join', ...paths),
-  pathResolve: (...paths: string[]) => ipcRenderer.invoke('path-resolve', ...paths),
-  pathDirname: (filePath: string) => ipcRenderer.invoke('path-dirname', filePath)
+contextBridge.exposeInMainWorld("electronAPI", {
+  selectImageFolder: () => ipcRenderer.invoke("select-image-folder"),
+  selectJsonFolders: () => ipcRenderer.invoke("select-json-folders"),
+  selectSaveFile: () => ipcRenderer.invoke("select-save-file"),
+  selectOpenFile: () => ipcRenderer.invoke("select-open-file"),
+  readDirectory: (dirPath: string) =>
+    ipcRenderer.invoke("read-directory", dirPath),
+  readFile: (filePath: string) => ipcRenderer.invoke("read-file", filePath),
+  writeFile: (filePath: string, content: string) =>
+    ipcRenderer.invoke("write-file", filePath, content),
+  pathJoin: (...paths: string[]) => ipcRenderer.invoke("path-join", ...paths),
+  pathResolve: (...paths: string[]) =>
+    ipcRenderer.invoke("path-resolve", ...paths),
+  pathDirname: (filePath: string) =>
+    ipcRenderer.invoke("path-dirname", filePath),
+  setUnsavedChanges: (hasChanges: boolean) =>
+    ipcRenderer.invoke("set-unsaved-changes", hasChanges),
+  saveCompleteClose: () => ipcRenderer.invoke("save-complete-close"),
+  onSaveBeforeClose: (callback: () => void) =>
+    ipcRenderer.on("save-before-close", callback),
 });

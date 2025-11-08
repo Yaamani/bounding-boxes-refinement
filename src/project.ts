@@ -4,7 +4,12 @@ import type {
   InputFormat2,
   SaveFileFormat,
 } from "./types.js";
-import { appState, generateId, setCurrentImage } from "./state.js";
+import {
+  appState,
+  generateId,
+  setCurrentImage,
+  clearModified,
+} from "./state.js";
 import { renderCanvas, resizeCanvasToContainer } from "./canvas.js";
 import { deselectAllBoxes, closeBoxEditor } from "./boxes.js";
 import { updateUI, hideWelcomeScreen } from "./ui.js";
@@ -22,7 +27,7 @@ export async function handleNewProject() {
   appState.imageFolder = imageFolder;
   appState.jsonFolders = jsonFolders;
   appState.currentSaveFile = null;
-  appState.isModified = false;
+  clearModified();
 
   await loadProject();
   hideWelcomeScreen();
@@ -295,7 +300,7 @@ export async function loadProjectFromFile(filePath: string): Promise<void> {
   appState.jsonFolders = null;
   appState.currentSaveFile = filePath;
   appState.currentImageIndex = appState.images.length > 0 ? 0 : -1;
-  appState.isModified = false;
+  clearModified();
 }
 
 // Save to file
@@ -324,6 +329,6 @@ export async function saveToFile(filePath: string) {
   const content = JSON.stringify(saveData, null, 2);
   await window.electronAPI.writeFile(filePath, content);
 
-  appState.isModified = false;
+  clearModified();
   console.log("Project saved successfully");
 }

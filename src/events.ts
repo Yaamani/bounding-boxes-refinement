@@ -505,7 +505,6 @@ export async function performManualOCR(boxId: string, orientation: number) {
 
 // Setup delegated event listeners for dynamically created elements
 export function setupDelegatedEventListeners() {
-  debugger;
   // Image list click delegation
   document.getElementById("image-list")!.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
