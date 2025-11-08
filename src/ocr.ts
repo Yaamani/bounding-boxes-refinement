@@ -20,10 +20,12 @@ export interface OCRResult {
 /**
  * Send an image to the OCR server and get text recognition results
  * @param imageBlob - The image blob to recognize
+ * @param manualOrientation - Optional manual orientation parameter (0, 90, 180, 270)
  * @returns OCR result with text and orientation, or null if failed
  */
 export async function recognizeTextFromImage(
-  imageBlob: Blob
+  imageBlob: Blob,
+  manualOrientation?: number
 ): Promise<OCRResult | null> {
   try {
     const formData = new FormData();
@@ -32,14 +34,16 @@ export async function recognizeTextFromImage(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const response = await fetch(
-      `${OCR_SERVER_URL}${OCR_ENDPOINT}?classify_image_orientation=true`,
-      {
-        method: "POST",
-        body: formData,
-        signal: controller.signal,
-      }
-    );
+    const query =
+      manualOrientation !== undefined
+        ? `?classify_image_orientation=true&orientation=${manualOrientation}`
+        : `?classify_image_orientation=true`;
+
+    const response = await fetch(`${OCR_SERVER_URL}${OCR_ENDPOINT}${query}`, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal,
+    });
 
     clearTimeout(timeoutId);
 
@@ -61,9 +65,11 @@ export async function recognizeTextFromImage(
       .filter((text: string) => text && text.trim())
       .join(" ");
 
-    // Extract orientation angle if available
-    let orientationAngle = 0;
+    // Extract orientation angle if available, or use manual orientation if provided
+    let orientationAngle =
+      manualOrientation !== undefined ? manualOrientation : 0;
     if (
+      !manualOrientation &&
       data.orientation_classification &&
       data.orientation_classification.detected_orientation
     ) {

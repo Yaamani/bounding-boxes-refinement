@@ -101,19 +101,20 @@ export function updateBoxList() {
     content.appendChild(coord);
     content.appendChild(orientation);
 
-    const actions = document.createElement("div");
-    actions.className = "card-actions justify-end mt-2";
+    const actionsTop = document.createElement("div");
+    actionsTop.className = "flex items-center justify-between mt-3";
+
+    const actionsTopLabel = document.createElement("div");
+    actionsTopLabel.className = "text-xs font-semibold opacity-70";
+    actionsTopLabel.textContent = "Manage";
+
+    const actionsTopButtons = document.createElement("div");
+    actionsTopButtons.className = "card-actions justify-end";
 
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-xs btn-primary";
     editBtn.textContent = "✏️";
     editBtn.title = "Edit";
-    // Event listener will be handled by delegation in renderer.ts
-    const ocrBtn = document.createElement("button");
-    ocrBtn.className = "btn btn-xs btn-info ocr-btn";
-    ocrBtn.setAttribute("data-box-id", box.id);
-    ocrBtn.textContent = "🔤";
-    ocrBtn.title = "Recognize text with OCR";
     // Event listener will be handled by delegation in renderer.ts
 
     const deleteBtn = document.createElement("button");
@@ -122,11 +123,44 @@ export function updateBoxList() {
     deleteBtn.title = "Delete";
     // Event listener will be handled by delegation in renderer.ts
 
-    actions.appendChild(editBtn);
-    actions.appendChild(ocrBtn);
-    actions.appendChild(deleteBtn);
+    actionsTopButtons.appendChild(editBtn);
+    actionsTopButtons.appendChild(deleteBtn);
 
-    content.appendChild(actions);
+    actionsTop.appendChild(actionsTopLabel);
+    actionsTop.appendChild(actionsTopButtons);
+
+    const actionsBottom = document.createElement("div");
+    actionsBottom.className = "flex items-center justify-between mt-2";
+
+    const actionsBottomLabel = document.createElement("div");
+    actionsBottomLabel.className = "text-xs font-semibold opacity-70";
+    actionsBottomLabel.textContent = "OCR";
+
+    const actionsBottomButtons = document.createElement("div");
+    actionsBottomButtons.className = "card-actions justify-end";
+
+    const ocrBtn = document.createElement("button");
+    ocrBtn.className = "btn btn-xs btn-primary ocr-btn";
+    ocrBtn.setAttribute("data-box-id", box.id);
+    ocrBtn.textContent = "🔤";
+    ocrBtn.title = "Recognize text with OCR";
+    // Event listener will be handled by delegation in renderer.ts
+
+    const manualOcrBtn = document.createElement("button");
+    manualOcrBtn.className = "btn btn-xs btn-secondary manual-ocr-btn";
+    manualOcrBtn.setAttribute("data-box-id", box.id);
+    manualOcrBtn.textContent = "🔤🔧";
+    manualOcrBtn.title = "Recognize text with manual orientation";
+    // Event listener will be handled by delegation in renderer.ts
+
+    actionsBottomButtons.appendChild(ocrBtn);
+    actionsBottomButtons.appendChild(manualOcrBtn);
+
+    actionsBottom.appendChild(actionsBottomLabel);
+    actionsBottom.appendChild(actionsBottomButtons);
+
+    content.appendChild(actionsTop);
+    content.appendChild(actionsBottom);
     item.appendChild(content);
 
     listContainer.appendChild(item);

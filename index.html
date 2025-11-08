@@ -460,6 +460,68 @@
       </div>
     </div>
 
+    <!-- Orientation Selection Modal -->
+    <dialog id="orientation-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Select Text Orientation</h3>
+        <p class="py-2 text-sm opacity-70">
+          Choose the orientation angle for OCR recognition:
+        </p>
+        <div class="form-control py-4">
+          <div class="flex flex-col gap-3">
+            <label class="label cursor-pointer">
+              <span class="label-text">0° (Normal)</span>
+              <input
+                type="radio"
+                name="orientation"
+                value="0"
+                class="radio radio-primary"
+                checked
+              />
+            </label>
+            <label class="label cursor-pointer">
+              <span class="label-text">90° (Rotated Right)</span>
+              <input
+                type="radio"
+                name="orientation"
+                value="90"
+                class="radio radio-primary"
+              />
+            </label>
+            <label class="label cursor-pointer">
+              <span class="label-text">180° (Upside Down)</span>
+              <input
+                type="radio"
+                name="orientation"
+                value="180"
+                class="radio radio-primary"
+              />
+            </label>
+            <label class="label cursor-pointer">
+              <span class="label-text">270° (Rotated Left)</span>
+              <input
+                type="radio"
+                name="orientation"
+                value="270"
+                class="radio radio-primary"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="modal-action">
+          <form method="dialog">
+            <button class="btn">Cancel</button>
+            <button id="recognize-btn" class="btn btn-primary">
+              Recognize
+            </button>
+          </form>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>Close</button>
+      </form>
+    </dialog>
+
     <script type="module" src="build/renderer.js"></script>
   </body>
 </html>

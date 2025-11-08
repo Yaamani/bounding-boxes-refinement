@@ -415,8 +415,97 @@ export async function handleBoxOCR(boxId: string) {
   }
 }
 
+// Handle manual OCR with orientation selection
+export function handleBoxManualOCR(boxId: string) {
+  const modal = document.getElementById(
+    "orientation-modal"
+  ) as HTMLDialogElement;
+  if (!modal) return;
+
+  // Store the current boxId for use when orientation is selected
+  modal.dataset.boxId = boxId;
+
+  // Show the modal
+  modal.showModal();
+}
+
+// Handle orientation selection and perform OCR
+export async function performManualOCR(boxId: string, orientation: number) {
+  if (appState.currentImageIndex < 0) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  const box = imageData.boxes.find((b) => b.id === boxId);
+  if (!box || !currentImage) return;
+
+  // Show loading state
+  const manualOcrBtn = document.querySelector(
+    `.manual-ocr-btn[data-box-id="${boxId}"]`
+  ) as HTMLButtonElement;
+  if (manualOcrBtn) {
+    manualOcrBtn.disabled = true;
+    manualOcrBtn.textContent = "⏳";
+    manualOcrBtn.title = "Recognizing text...";
+  }
+
+  try {
+    // Extract the bounding box image
+    const imageBlob = await extractBoundingBoxImage(box);
+    if (!imageBlob) {
+      throw new Error("Failed to extract bounding box image");
+    }
+
+    // Send to OCR server with manual orientation
+    const ocrResult = await recognizeTextFromImage(imageBlob, orientation);
+
+    if (ocrResult) {
+      // Update the box data with recognized text and orientation
+      box.data = ocrResult.text;
+      box.orientation = ocrResult.orientation;
+      appState.isModified = true;
+
+      // Update UI
+      updateBoxList();
+      renderCanvas(appState);
+
+      // Update box editor if it's currently open for this box
+      if (selectedBoxId === boxId) {
+        showBoxEditor(boxId);
+      }
+
+      // Show success message
+      if (manualOcrBtn) {
+        manualOcrBtn.textContent = "✅";
+        manualOcrBtn.title = "Text recognized successfully!";
+        setTimeout(() => {
+          manualOcrBtn.textContent = "↻";
+          manualOcrBtn.title = "Recognize text with manual orientation";
+        }, 2000);
+      }
+    } else {
+      throw new Error("No text recognized in image");
+    }
+  } catch (error) {
+    console.error("Manual OCR error:", error);
+    alert(
+      `OCR failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }\n\nMake sure the PaddleOCR server is running`
+    );
+  } finally {
+    // Reset button state
+    if (manualOcrBtn && manualOcrBtn.textContent !== "✅") {
+      manualOcrBtn.disabled = false;
+      manualOcrBtn.textContent = "↻";
+      manualOcrBtn.title = "Recognize text with manual orientation";
+    }
+  }
+}
+
 // Setup delegated event listeners for dynamically created elements
 export function setupDelegatedEventListeners() {
+  debugger;
   // Image list click delegation
   document.getElementById("image-list")!.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
@@ -433,6 +522,31 @@ export function setupDelegatedEventListeners() {
   document.getElementById("box-list")!.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
 
+    // Handle OCR button (must check before btn-primary since OCR button has btn-primary class)
+    if (
+      target.classList.contains("ocr-btn") ||
+      target.textContent === "🔤" ||
+      target.textContent === "⏳" ||
+      target.textContent === "✅"
+    ) {
+      e.stopPropagation();
+      const boxId = target.getAttribute("data-box-id");
+      if (boxId) {
+        handleBoxOCR(boxId);
+      }
+      return;
+    }
+
+    // Handle manual OCR button
+    if (target.classList.contains("manual-ocr-btn")) {
+      e.stopPropagation();
+      const boxId = target.getAttribute("data-box-id");
+      if (boxId) {
+        handleBoxManualOCR(boxId);
+      }
+      return;
+    }
+
     // Handle edit button
     if (
       target.classList.contains("btn-primary") ||
@@ -448,21 +562,6 @@ export function setupDelegatedEventListeners() {
             handleBoxItemClick(imageData.boxes[index].id);
           }
         }
-      }
-      return;
-    }
-
-    // Handle OCR button
-    if (
-      target.classList.contains("ocr-btn") ||
-      target.textContent === "🔤" ||
-      target.textContent === "⏳" ||
-      target.textContent === "✅"
-    ) {
-      e.stopPropagation();
-      const boxId = target.getAttribute("data-box-id");
-      if (boxId) {
-        handleBoxOCR(boxId);
       }
       return;
     }
@@ -495,4 +594,28 @@ export function setupDelegatedEventListeners() {
       }
     }
   });
+
+  // Orientation selection modal delegation
+  const orientationModal = document.getElementById(
+    "orientation-modal"
+  ) as HTMLDialogElement;
+  if (orientationModal) {
+    const recognizeBtn = document.getElementById("recognize-btn");
+    if (recognizeBtn) {
+      recognizeBtn.addEventListener("click", (e) => {
+        e.preventDefault(); // Prevent form submission
+        const selectedRadio = orientationModal.querySelector(
+          'input[name="orientation"]:checked'
+        ) as HTMLInputElement;
+        if (selectedRadio) {
+          const orientation = parseInt(selectedRadio.value, 10);
+          const boxId = orientationModal.dataset.boxId;
+          if (boxId) {
+            performManualOCR(boxId, orientation);
+            orientationModal.close();
+          }
+        }
+      });
+    }
+  }
 }
