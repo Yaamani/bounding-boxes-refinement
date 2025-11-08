@@ -286,6 +286,30 @@ export function closeBoxEditor() {
   document.getElementById("box-editor")!.style.display = "none";
 }
 
+// Update coordinate input fields with current box coordinates
+export function updateCoordinateFields(boxId: string) {
+  if (appState.currentImageIndex < 0) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  const box = imageData.boxes.find((b) => b.id === boxId);
+  if (!box) return;
+
+  (document.getElementById("coord-x1") as HTMLInputElement).value = Math.round(
+    box.coordinate[0]
+  ).toString();
+  (document.getElementById("coord-y1") as HTMLInputElement).value = Math.round(
+    box.coordinate[1]
+  ).toString();
+  (document.getElementById("coord-x2") as HTMLInputElement).value = Math.round(
+    box.coordinate[2]
+  ).toString();
+  (document.getElementById("coord-y2") as HTMLInputElement).value = Math.round(
+    box.coordinate[3]
+  ).toString();
+}
+
 // Apply box edit
 export function applyBoxEdit() {
   if (appState.currentImageIndex < 0 || !selectedBoxId) return;

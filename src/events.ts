@@ -42,6 +42,7 @@ import {
   showBoxEditor,
   closeBoxEditor,
   applyBoxEdit,
+  updateCoordinateFields,
 } from "./boxes.js";
 import { updateUI, updateBoxList, updateImageList } from "./ui.js";
 import { recognizeTextFromImage } from "./ocr.js";
@@ -115,6 +116,7 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
       updateBoxList();
+      updateCoordinateFields(resizingBox.id);
     } else if (currentMode === "select" && selectedBoxId) {
       // Move box
       const deltaX = mouseX - dragStart.x;
@@ -123,6 +125,7 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
       updateBoxList();
+      updateCoordinateFields(selectedBoxId);
     } else if (currentMode === "draw") {
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
