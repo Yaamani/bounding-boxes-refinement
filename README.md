@@ -27,13 +27,23 @@ A desktop application built with Electron for refining and editing bounding boxe
 
   - Recognize text within bounding boxes using PaddleOCR server
   - One-click text recognition with visual feedback
+  - Manual text orientation selection (0°, 90°, 180°, 270°) for optimized OCR recognition
   - Automatic label updates with recognized text
 
 - **Project Management**:
+
   - Create new projects from image and JSON folders
   - Open previously saved projects
   - Save and Save As functionality
   - Track modification state
+  - Save prompt on exit to prevent data loss
+  - Checked status tracking for images
+
+- **User Interface & Interaction**:
+  - Real-time coordinate updates when moving/resizing boxes on canvas
+  - Auto-scroll to selected bounding boxes and images in lists
+  - Different cursor icons for different modes (crosshair, grab, default)
+  - Toggle label display on canvas
 
 ## Installation
 
@@ -86,35 +96,39 @@ yarn start            # Terminal 2
 
 ### Canvas Controls
 
-- **Select Mode** (🎯): Click and drag boxes to move them, click handles to resize
+- **Select Mode** (🎯): Click and drag boxes to move them, click handles to resize. Coordinates update in real-time as you move/resize.
 - **Pan Mode** (✋): Click and drag to pan around the image
 - **Draw Mode** (➕): Click and drag to draw a new bounding box
 - **Zoom**: Use zoom buttons or mouse wheel to zoom in/out
 - **Fit to Screen**: Automatically scale image to fit the canvas
+- **Show/Hide Labels**: Toggle the display of bounding box labels on the canvas
 
 ### Editing Boxes
 
 1. Click on a box in the canvas or box list to select it
 2. The box editor panel will appear on the right
-3. Edit the label/data text
-4. Adjust coordinates if needed
-5. Click "Apply" to save changes
-6. Or use the delete button to remove the box
+3. Edit the label/data text - changes are applied instantly
+4. Adjust coordinates if needed - changes are applied instantly
+5. Use the delete button to remove the box
 
 ### OCR Text Recognition
 
 1. Select a bounding box in the canvas or box list
 2. Click the 🔤 (OCR) button on the box card in the right sidebar
-3. The button will show ⏳ while processing
-4. Recognized text will automatically update the box label
-5. Requires PaddleOCR server running on localhost:5000
+3. A modal will appear to select text orientation (0°, 90°, 180°, 270°)
+4. Click "Recognize" to start OCR processing
+5. The button will show ⏳ while processing
+6. Recognized text will automatically update the box label
+7. Requires PaddleOCR server running on localhost:5000
 
 ### Keyboard Shortcuts
 
 - **Ctrl/Cmd + S**: Save project
+- **S**: Switch to Select Mode
+- **P**: Switch to Pan Mode
 - **Delete**: Delete selected box
 - **Escape**: Deselect box or exit draw mode
-- **Arrow Left/Right**: Navigate between images
+- **Arrow Left/Right**: Navigate between images (disabled while editing box data to prevent conflicts)
 
 ### Saving Your Work
 
