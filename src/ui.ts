@@ -44,8 +44,31 @@ export function updateImageList() {
     if (index === appState.currentImageIndex) {
       item.classList.add("btn-active");
     }
-    item.textContent = image.fileName;
-    item.title = image.fileName;
+
+    // Create a container for the checkbox and filename
+    const container = document.createElement("div");
+    container.className = "flex items-center gap-2 w-full";
+
+    // Add checkbox
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "checkbox checkbox-sm";
+    checkbox.checked = image.checked;
+    checkbox.onclick = (e) => {
+      e.stopPropagation();
+    };
+    checkbox.dataset.imageIndex = index.toString();
+
+    // Add filename
+    const filename = document.createElement("span");
+    filename.textContent = image.fileName;
+    filename.title = image.fileName;
+    filename.className = "flex-1";
+
+    container.appendChild(checkbox);
+    container.appendChild(filename);
+    item.appendChild(container);
+
     // Event listener will be handled by delegation in renderer.ts
     listContainer.appendChild(item);
   });

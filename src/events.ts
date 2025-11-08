@@ -12,6 +12,7 @@ import {
   selectedBoxId,
   resizingBox,
   previousModeForMiddleMouse,
+  hasUnsavedBoxChanges,
   setOffsetX,
   setOffsetY,
   setIsDragging,
@@ -21,6 +22,9 @@ import {
   setResizingBox,
   setPreviousModeForMiddleMouse,
   setMode,
+  setHasUnsavedBoxChanges,
+  toggleImageCheckedStatus,
+  markAsModified,
 } from "./state.js";
 import {
   renderCanvas,
@@ -294,9 +298,36 @@ export function handleKeyDown(e: KeyboardEvent) {
 
 // Handle image list item click
 export function handleImageItemClick(index: number) {
+  // If we have unsaved changes and switching to a different image
+  if (
+    hasUnsavedBoxChanges &&
+    index !== appState.currentImageIndex &&
+    !appState.images[appState.currentImageIndex]?.checked
+  ) {
+    const previousIndex = appState.currentImageIndex;
+
+    // Show the checked status modal
+    const modal = document.getElementById(
+      "checked-status-modal"
+    ) as HTMLDialogElement;
+    if (modal) {
+      modal.dataset.targetIndex = index.toString();
+      modal.dataset.previousIndex = previousIndex.toString();
+      modal.showModal();
+      return; // Don't navigate yet
+    }
+  }
+
+  // Normal navigation
+  performImageNavigation(index);
+}
+
+// Perform the actual image navigation
+export function performImageNavigation(index: number) {
   appState.currentImageIndex = index;
   deselectAllBoxes();
   closeBoxEditor();
+  setHasUnsavedBoxChanges(false);
   loadCurrentImage(() => {
     renderCanvas(appState);
   });
@@ -379,6 +410,7 @@ export async function handleBoxOCR(boxId: string) {
       box.data = ocrResult.text;
       box.orientation = ocrResult.orientation;
       appState.isModified = true;
+      setHasUnsavedBoxChanges(true);
 
       // Update UI
       updateBoxList();
@@ -467,6 +499,7 @@ export async function performManualOCR(boxId: string, orientation: number) {
       box.data = ocrResult.text;
       box.orientation = ocrResult.orientation;
       appState.isModified = true;
+      setHasUnsavedBoxChanges(true);
 
       // Update UI
       updateBoxList();
@@ -511,11 +544,41 @@ export function setupDelegatedEventListeners() {
   // Image list click delegation
   document.getElementById("image-list")!.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
+
+    // Skip checkbox clicks, they're handled by change event
+    if (
+      target.tagName === "INPUT" &&
+      (target as HTMLInputElement).type === "checkbox"
+    ) {
+      return;
+    }
+
     const item = target.closest(".btn");
     if (item) {
       const index = Array.from(item.parentElement!.children).indexOf(item);
       if (index >= 0) {
         handleImageItemClick(index);
+      }
+    }
+  });
+
+  // Image list checkbox change delegation
+  document.getElementById("image-list")!.addEventListener("change", (e) => {
+    const target = e.target as HTMLElement;
+
+    // Handle checkbox changes
+    if (
+      target.tagName === "INPUT" &&
+      (target as HTMLInputElement).type === "checkbox"
+    ) {
+      const checkbox = target as HTMLInputElement;
+      const imageIndex = parseInt(checkbox.dataset.imageIndex || "-1", 10);
+      if (imageIndex >= 0 && imageIndex < appState.images.length) {
+        const image = appState.images[imageIndex];
+        if (image) {
+          image.checked = checkbox.checked;
+          markAsModified();
+        }
       }
     }
   });
@@ -616,6 +679,53 @@ export function setupDelegatedEventListeners() {
             performManualOCR(boxId, orientation);
             orientationModal.close();
           }
+        }
+      });
+    }
+  }
+
+  // Checked status modal delegation
+  const checkedModal = document.getElementById(
+    "checked-status-modal"
+  ) as HTMLDialogElement;
+  if (checkedModal) {
+    const yesBtn = document.getElementById("checked-yes-btn");
+    const noBtn = document.getElementById("checked-no-btn");
+
+    if (yesBtn) {
+      yesBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const previousIndex = parseInt(
+          checkedModal.dataset.previousIndex || "-1",
+          10
+        );
+        const targetIndex = parseInt(
+          checkedModal.dataset.targetIndex || "-1",
+          10
+        );
+
+        if (previousIndex >= 0) {
+          toggleImageCheckedStatus(previousIndex);
+        }
+
+        checkedModal.close();
+        if (targetIndex >= 0) {
+          performImageNavigation(targetIndex);
+        }
+      });
+    }
+
+    if (noBtn) {
+      noBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetIndex = parseInt(
+          checkedModal.dataset.targetIndex || "-1",
+          10
+        );
+
+        checkedModal.close();
+        if (targetIndex >= 0) {
+          performImageNavigation(targetIndex);
         }
       });
     }

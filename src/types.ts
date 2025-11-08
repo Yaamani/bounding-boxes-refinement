@@ -17,6 +17,7 @@ export interface InputFormat2 {
 // Save file format - normalized format
 export interface SaveFileFormat {
   image_path: string;
+  checked?: boolean;
   polygons: {
     data: string;
     coordinate: [number, number, number, number];
@@ -38,6 +39,7 @@ export interface ImageData {
   path: string;
   fileName: string;
   boxes: BoundingBox[];
+  checked: boolean;
 }
 
 // Application state

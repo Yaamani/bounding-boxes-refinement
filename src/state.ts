@@ -25,6 +25,7 @@ export let selectedBoxId: string | null = null;
 export let resizingBox: { id: string; handle: string } | null = null;
 export let previousModeForMiddleMouse: "select" | "pan" | "draw" | null = null;
 export let showBoxLabels = true;
+export let hasUnsavedBoxChanges = false;
 
 // Setters for canvas state
 export function setCanvas(
@@ -103,6 +104,20 @@ export function setPreviousModeForMiddleMouse(
 
 export function setShowBoxLabels(show: boolean) {
   showBoxLabels = show;
+}
+
+export function setHasUnsavedBoxChanges(value: boolean) {
+  hasUnsavedBoxChanges = value;
+}
+
+export function toggleImageCheckedStatus(imageIndex: number) {
+  if (imageIndex >= 0 && imageIndex < appState.images.length) {
+    const image = appState.images[imageIndex];
+    if (image) {
+      image.checked = !image.checked;
+      markAsModified();
+    }
+  }
 }
 
 // Mark as modified

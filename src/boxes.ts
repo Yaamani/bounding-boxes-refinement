@@ -10,6 +10,7 @@ import {
   setSelectedBoxId,
   markAsModified,
   generateId,
+  setHasUnsavedBoxChanges,
 } from "./state.js";
 
 // Get box at position
@@ -146,6 +147,7 @@ export function resizeBox(
   // Ensure coordinates are in correct order
   normalizeBoxCoordinates(box);
   markAsModified();
+  setHasUnsavedBoxChanges(true);
 }
 
 // Move box
@@ -169,6 +171,7 @@ export function moveBox(boxId: string, deltaX: number, deltaY: number) {
     y2 + deltaImgY,
   ];
   markAsModified();
+  setHasUnsavedBoxChanges(true);
 }
 
 // Create new box
@@ -190,6 +193,7 @@ export function createNewBox(coordinate: [number, number, number, number]) {
   imageData.boxes.push(newBox);
   selectBox(newBox.id);
   markAsModified();
+  setHasUnsavedBoxChanges(true);
 }
 
 // Select box
@@ -247,6 +251,7 @@ export function deleteSelectedBox() {
     imageData.boxes.splice(index, 1);
     setSelectedBoxId(null);
     markAsModified();
+    setHasUnsavedBoxChanges(true);
   }
 }
 
@@ -344,4 +349,5 @@ export function applyBoxEdit() {
 
   normalizeBoxCoordinates(box);
   markAsModified();
+  setHasUnsavedBoxChanges(true);
 }

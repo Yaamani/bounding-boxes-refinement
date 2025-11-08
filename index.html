@@ -531,6 +531,30 @@
       </form>
     </dialog>
 
+    <!-- Checked Status Confirmation Modal -->
+    <dialog id="checked-status-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Mark Image as Checked?</h3>
+        <p class="py-2">
+          You have made changes to the bounding boxes in this image.
+        </p>
+        <p class="py-2 text-sm opacity-70">
+          Do you want to mark this image as checked?
+        </p>
+        <div class="modal-action">
+          <form method="dialog">
+            <button id="checked-no-btn" class="btn">No</button>
+            <button id="checked-yes-btn" class="btn btn-primary">
+              Yes, Mark as Checked
+            </button>
+          </form>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>Close</button>
+      </form>
+    </dialog>
+
     <script type="module" src="build/renderer.js"></script>
   </body>
 </html>

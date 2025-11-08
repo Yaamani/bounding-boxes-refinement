@@ -142,6 +142,7 @@ export async function loadProject() {
       path: fullPath,
       fileName: imageFile,
       boxes: imageBoxMap.get(imageFile) || [],
+      checked: false,
     });
   }
 
@@ -293,6 +294,7 @@ export async function loadProjectFromFile(filePath: string): Promise<void> {
       path: fullImagePath,
       fileName: fileName,
       boxes: boxes,
+      checked: item.checked || false,
     });
   }
 
@@ -318,6 +320,7 @@ export async function saveToFile(filePath: string) {
 
     saveData.push({
       image_path: relativePath,
+      checked: image.checked,
       polygons: image.boxes.map((box) => ({
         data: box.data,
         coordinate: box.coordinate,
