@@ -14,6 +14,7 @@ import {
   setScale,
   showBoxLabels,
 } from "./state.js";
+import { hasCollision } from "./boxes.js";
 
 // Render canvas
 export function renderCanvas(appState: any) {
@@ -70,18 +71,29 @@ function drawBoundingBox(
   const height = Math.abs(y2 - y1);
   const isPortrait = height > width;
 
+  // Check if box has collisions
+  const hasBoxCollision = hasCollision(box.id);
+
   // Draw box - use different colors for portrait vs landscape
   if (box.isSelected) {
     ctx.strokeStyle = "#00ff00"; // Keep selected boxes green
   } else {
     ctx.strokeStyle = isPortrait ? "#0099ff" : "#ff0000"; // Blue for portrait (height > width), Red for landscape
   }
-  ctx.lineWidth = box.isSelected ? 3 : 2;
+
+  // Use thicker line width for colliding boxes
+  if (hasBoxCollision) {
+    ctx.lineWidth = box.isSelected ? 10 : 7;
+  } else {
+    ctx.lineWidth = box.isSelected ? 3 : 2;
+  }
+
   ctx.strokeRect(canvasX1, canvasY1, canvasX2 - canvasX1, canvasY2 - canvasY1);
 
   // Draw resize handles if selected
   if (box.isSelected) {
-    const handleSize = 8;
+    const handleSize = hasBoxCollision ? 15 : 10;
+    ctx.fillStyle = "#00ff00";
     ctx.fillStyle = "#00ff00";
     // Top-left
     ctx.fillRect(

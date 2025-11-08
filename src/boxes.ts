@@ -351,3 +351,37 @@ export function applyBoxEdit() {
   markAsModified();
   setHasUnsavedBoxChanges(true);
 }
+
+// Check if two bounding boxes collide (overlap)
+export function doBoxesCollide(box1: BoundingBox, box2: BoundingBox): boolean {
+  const [x1a, y1a, x2a, y2a] = box1.coordinate;
+  const [x1b, y1b, x2b, y2b] = box2.coordinate;
+
+  // Check if boxes overlap
+  return !(x2a < x1b || x2b < x1a || y2a < y1b || y2b < y1a);
+}
+
+// Get all boxes that collide with a given box
+export function getCollidingBoxes(boxId: string): BoundingBox[] {
+  if (appState.currentImageIndex < 0) return [];
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return [];
+
+  const targetBox = imageData.boxes.find((b) => b.id === boxId);
+  if (!targetBox) return [];
+
+  const collidingBoxes: BoundingBox[] = [];
+  for (const box of imageData.boxes) {
+    if (box.id !== boxId && doBoxesCollide(targetBox, box)) {
+      collidingBoxes.push(box);
+    }
+  }
+
+  return collidingBoxes;
+}
+
+// Check if a box has any collisions
+export function hasCollision(boxId: string): boolean {
+  return getCollidingBoxes(boxId).length > 0;
+}
