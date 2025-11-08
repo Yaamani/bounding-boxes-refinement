@@ -1,4 +1,4 @@
-import type { BoundingBox } from './types.js';
+import type { BoundingBox } from "./types.js";
 import {
   appState,
   canvas,
@@ -9,8 +9,8 @@ import {
   selectedBoxId,
   setSelectedBoxId,
   markAsModified,
-  generateId
-} from './state.js';
+  generateId,
+} from "./state.js";
 
 // Get box at position
 export function getBoxAtPosition(x: number, y: number): BoundingBox | null {
@@ -43,13 +43,17 @@ export function getBoxAtPosition(x: number, y: number): BoundingBox | null {
 }
 
 // Get resize handle at position
-export function getResizeHandle(x: number, y: number): { id: string; handle: string } | null {
-  if (appState.currentImageIndex < 0 || !currentImage || !selectedBoxId) return null;
+export function getResizeHandle(
+  x: number,
+  y: number
+): { id: string; handle: string } | null {
+  if (appState.currentImageIndex < 0 || !currentImage || !selectedBoxId)
+    return null;
 
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return null;
 
-  const box = imageData.boxes.find(b => b.id === selectedBoxId);
+  const box = imageData.boxes.find((b) => b.id === selectedBoxId);
   if (!box) return null;
 
   const imgWidth = currentImage.width * scale;
@@ -66,17 +70,29 @@ export function getResizeHandle(x: number, y: number): { id: string; handle: str
   const handleSize = 8;
   const threshold = handleSize;
 
-  if (Math.abs(x - canvasX1) <= threshold && Math.abs(y - canvasY1) <= threshold) {
-    return { id: box.id, handle: 'tl' };
+  if (
+    Math.abs(x - canvasX1) <= threshold &&
+    Math.abs(y - canvasY1) <= threshold
+  ) {
+    return { id: box.id, handle: "tl" };
   }
-  if (Math.abs(x - canvasX2) <= threshold && Math.abs(y - canvasY1) <= threshold) {
-    return { id: box.id, handle: 'tr' };
+  if (
+    Math.abs(x - canvasX2) <= threshold &&
+    Math.abs(y - canvasY1) <= threshold
+  ) {
+    return { id: box.id, handle: "tr" };
   }
-  if (Math.abs(x - canvasX1) <= threshold && Math.abs(y - canvasY2) <= threshold) {
-    return { id: box.id, handle: 'bl' };
+  if (
+    Math.abs(x - canvasX1) <= threshold &&
+    Math.abs(y - canvasY2) <= threshold
+  ) {
+    return { id: box.id, handle: "bl" };
   }
-  if (Math.abs(x - canvasX2) <= threshold && Math.abs(y - canvasY2) <= threshold) {
-    return { id: box.id, handle: 'br' };
+  if (
+    Math.abs(x - canvasX2) <= threshold &&
+    Math.abs(y - canvasY2) <= threshold
+  ) {
+    return { id: box.id, handle: "br" };
   }
 
   return null;
@@ -89,18 +105,23 @@ export function normalizeBoxCoordinates(box: BoundingBox) {
     Math.min(x1, x2),
     Math.min(y1, y2),
     Math.max(x1, x2),
-    Math.max(y1, y2)
+    Math.max(y1, y2),
   ];
 }
 
 // Resize box
-export function resizeBox(boxId: string, handle: string, deltaX: number, deltaY: number) {
+export function resizeBox(
+  boxId: string,
+  handle: string,
+  deltaX: number,
+  deltaY: number
+) {
   if (appState.currentImageIndex < 0 || !currentImage) return;
 
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  const box = imageData.boxes.find(b => b.id === boxId);
+  const box = imageData.boxes.find((b) => b.id === boxId);
   if (!box) return;
 
   const [x1, y1, x2, y2] = box.coordinate;
@@ -108,16 +129,16 @@ export function resizeBox(boxId: string, handle: string, deltaX: number, deltaY:
   const deltaImgY = deltaY / scale;
 
   switch (handle) {
-    case 'tl':
+    case "tl":
       box.coordinate = [x1 + deltaImgX, y1 + deltaImgY, x2, y2];
       break;
-    case 'tr':
+    case "tr":
       box.coordinate = [x1, y1 + deltaImgY, x2 + deltaImgX, y2];
       break;
-    case 'bl':
+    case "bl":
       box.coordinate = [x1 + deltaImgX, y1, x2, y2 + deltaImgY];
       break;
-    case 'br':
+    case "br":
       box.coordinate = [x1, y1, x2 + deltaImgX, y2 + deltaImgY];
       break;
   }
@@ -134,14 +155,19 @@ export function moveBox(boxId: string, deltaX: number, deltaY: number) {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  const box = imageData.boxes.find(b => b.id === boxId);
+  const box = imageData.boxes.find((b) => b.id === boxId);
   if (!box) return;
 
   const deltaImgX = deltaX / scale;
   const deltaImgY = deltaY / scale;
 
   const [x1, y1, x2, y2] = box.coordinate;
-  box.coordinate = [x1 + deltaImgX, y1 + deltaImgY, x2 + deltaImgX, y2 + deltaImgY];
+  box.coordinate = [
+    x1 + deltaImgX,
+    y1 + deltaImgY,
+    x2 + deltaImgX,
+    y2 + deltaImgY,
+  ];
   markAsModified();
 }
 
@@ -154,9 +180,10 @@ export function createNewBox(coordinate: [number, number, number, number]) {
 
   const newBox: BoundingBox = {
     id: generateId(),
-    data: '',
+    data: "",
     coordinate: coordinate,
-    isSelected: false
+    orientation: 0,
+    isSelected: false,
   };
 
   normalizeBoxCoordinates(newBox);
@@ -172,7 +199,7 @@ export function selectBox(boxId: string) {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  imageData.boxes.forEach(box => {
+  imageData.boxes.forEach((box) => {
     box.isSelected = box.id === boxId;
   });
 
@@ -186,7 +213,7 @@ export function deselectAllBoxes() {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  imageData.boxes.forEach(box => {
+  imageData.boxes.forEach((box) => {
     box.isSelected = false;
   });
 
@@ -200,14 +227,21 @@ export function deleteSelectedBox() {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  const box = imageData.boxes.find(b => b.id === selectedBoxId);
+  const box = imageData.boxes.find((b) => b.id === selectedBoxId);
   if (!box) return;
 
   // Show confirmation dialog
-  const boxLabel = box.data || `Box ${imageData.boxes.findIndex(b => b.id === selectedBoxId) + 1}`;
-  if (!confirm(`Are you sure you want to delete the bounding box "${boxLabel}"?\n\nThis action cannot be undone.`)) return;
+  const boxLabel =
+    box.data ||
+    `Box ${imageData.boxes.findIndex((b) => b.id === selectedBoxId) + 1}`;
+  if (
+    !confirm(
+      `Are you sure you want to delete the bounding box "${boxLabel}"?\n\nThis action cannot be undone.`
+    )
+  )
+    return;
 
-  const index = imageData.boxes.findIndex(b => b.id === selectedBoxId);
+  const index = imageData.boxes.findIndex((b) => b.id === selectedBoxId);
 
   if (index >= 0) {
     imageData.boxes.splice(index, 1);
@@ -223,22 +257,33 @@ export function showBoxEditor(boxId: string) {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  const box = imageData.boxes.find(b => b.id === boxId);
+  const box = imageData.boxes.find((b) => b.id === boxId);
   if (!box) return;
 
-  const editor = document.getElementById('box-editor')!;
-  editor.style.display = 'block';
+  const editor = document.getElementById("box-editor")!;
+  editor.style.display = "block";
 
-  (document.getElementById('box-data-input') as HTMLTextAreaElement).value = box.data;
-  (document.getElementById('coord-x1') as HTMLInputElement).value = Math.round(box.coordinate[0]).toString();
-  (document.getElementById('coord-y1') as HTMLInputElement).value = Math.round(box.coordinate[1]).toString();
-  (document.getElementById('coord-x2') as HTMLInputElement).value = Math.round(box.coordinate[2]).toString();
-  (document.getElementById('coord-y2') as HTMLInputElement).value = Math.round(box.coordinate[3]).toString();
+  (document.getElementById("box-data-input") as HTMLTextAreaElement).value =
+    box.data;
+  (document.getElementById("coord-x1") as HTMLInputElement).value = Math.round(
+    box.coordinate[0]
+  ).toString();
+  (document.getElementById("coord-y1") as HTMLInputElement).value = Math.round(
+    box.coordinate[1]
+  ).toString();
+  (document.getElementById("coord-x2") as HTMLInputElement).value = Math.round(
+    box.coordinate[2]
+  ).toString();
+  (document.getElementById("coord-y2") as HTMLInputElement).value = Math.round(
+    box.coordinate[3]
+  ).toString();
+  (document.getElementById("orientation-input") as HTMLSelectElement).value =
+    box.orientation.toString();
 }
 
 // Close box editor
 export function closeBoxEditor() {
-  document.getElementById('box-editor')!.style.display = 'none';
+  document.getElementById("box-editor")!.style.display = "none";
 }
 
 // Apply box edit
@@ -248,16 +293,30 @@ export function applyBoxEdit() {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
-  const box = imageData.boxes.find(b => b.id === selectedBoxId);
+  const box = imageData.boxes.find((b) => b.id === selectedBoxId);
   if (!box) return;
 
-  box.data = (document.getElementById('box-data-input') as HTMLTextAreaElement).value;
+  box.data = (
+    document.getElementById("box-data-input") as HTMLTextAreaElement
+  ).value;
   box.coordinate = [
-    parseFloat((document.getElementById('coord-x1') as HTMLInputElement).value) || 0,
-    parseFloat((document.getElementById('coord-y1') as HTMLInputElement).value) || 0,
-    parseFloat((document.getElementById('coord-x2') as HTMLInputElement).value) || 0,
-    parseFloat((document.getElementById('coord-y2') as HTMLInputElement).value) || 0
+    parseFloat(
+      (document.getElementById("coord-x1") as HTMLInputElement).value
+    ) || 0,
+    parseFloat(
+      (document.getElementById("coord-y1") as HTMLInputElement).value
+    ) || 0,
+    parseFloat(
+      (document.getElementById("coord-x2") as HTMLInputElement).value
+    ) || 0,
+    parseFloat(
+      (document.getElementById("coord-y2") as HTMLInputElement).value
+    ) || 0,
   ];
+  box.orientation =
+    parseFloat(
+      (document.getElementById("orientation-input") as HTMLSelectElement).value
+    ) || 0;
 
   normalizeBoxCoordinates(box);
   markAsModified();

@@ -1812,6 +1812,16 @@
   .p-4 {
     padding: calc(var(--spacing) * 4);
   }
+  .select-sm {
+    @layer daisyui.modifier {
+      --size: calc(var(--size-field, 0.25rem) * 8);
+      font-size: 0.75rem;
+      option {
+        padding-inline: calc(0.25rem * 2.5);
+        padding-block: calc(0.25rem * 1);
+      }
+    }
+  }
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
   }

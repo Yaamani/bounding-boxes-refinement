@@ -369,16 +369,22 @@ export async function handleBoxOCR(boxId: string) {
     }
 
     // Send to OCR server
-    const recognizedText = await recognizeTextFromImage(imageBlob);
+    const ocrResult = await recognizeTextFromImage(imageBlob);
 
-    if (recognizedText) {
-      // Update the box data with recognized text
-      box.data = recognizedText;
+    if (ocrResult) {
+      // Update the box data with recognized text and orientation
+      box.data = ocrResult.text;
+      box.orientation = ocrResult.orientation;
       appState.isModified = true;
 
       // Update UI
       updateBoxList();
       renderCanvas(appState);
+
+      // Update box editor if it's currently open for this box
+      if (selectedBoxId === boxId) {
+        showBoxEditor(boxId);
+      }
 
       // Show success message
       if (ocrBtn) {

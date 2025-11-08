@@ -4,18 +4,27 @@
  */
 
 // Configuration - Update these with your server details
-const OCR_SERVER_URL = /* process.env.OCR_SERVER_URL || */ "http://192.168.1.197:5000";
+const OCR_SERVER_URL =
+  /* process.env.OCR_SERVER_URL || */ "http://192.168.1.197:5000";
 const OCR_ENDPOINT = "/recognize";
 const TIMEOUT_MS = 30000; // 30 second timeout
 
 /**
+ * OCR recognition result with text and orientation
+ */
+export interface OCRResult {
+  text: string;
+  orientation: number;
+}
+
+/**
  * Send an image to the OCR server and get text recognition results
  * @param imageBlob - The image blob to recognize
- * @returns Recognized text or null if failed
+ * @returns OCR result with text and orientation, or null if failed
  */
 export async function recognizeTextFromImage(
   imageBlob: Blob
-): Promise<string | null> {
+): Promise<OCRResult | null> {
   try {
     const formData = new FormData();
     formData.append("image", imageBlob, "bounding-box.jpg");
@@ -23,11 +32,14 @@ export async function recognizeTextFromImage(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const response = await fetch(`${OCR_SERVER_URL}${OCR_ENDPOINT}?classify_image_orientation=true`, {
-      method: "POST",
-      body: formData,
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `${OCR_SERVER_URL}${OCR_ENDPOINT}?classify_image_orientation=true`,
+      {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      }
+    );
 
     clearTimeout(timeoutId);
 
@@ -49,7 +61,19 @@ export async function recognizeTextFromImage(
       .filter((text: string) => text && text.trim())
       .join(" ");
 
-    return recognizedTexts || null;
+    // Extract orientation angle if available
+    let orientationAngle = 0;
+    if (
+      data.orientation_classification &&
+      data.orientation_classification.detected_orientation
+    ) {
+      orientationAngle =
+        parseInt(data.orientation_classification.detected_orientation, 10) || 0;
+    }
+
+    return recognizedTexts
+      ? { text: recognizedTexts, orientation: orientationAngle }
+      : null;
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === "AbortError") {

@@ -93,8 +93,13 @@ export function updateBoxList() {
       x2
     )}, ${Math.round(y2)})`;
 
+    const orientation = document.createElement("div");
+    orientation.className = "text-xs opacity-70";
+    orientation.textContent = `Orientation: ${box.orientation}°`;
+
     content.appendChild(label);
     content.appendChild(coord);
+    content.appendChild(orientation);
 
     const actions = document.createElement("div");
     actions.className = "card-actions justify-end mt-2";

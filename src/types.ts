@@ -20,6 +20,7 @@ export interface SaveFileFormat {
   polygons: {
     data: string;
     coordinate: [number, number, number, number];
+    orientation: number;
   }[];
 }
 
@@ -28,6 +29,7 @@ export interface BoundingBox {
   id: string;
   data: string;
   coordinate: [number, number, number, number]; // [x1, y1, x2, y2]
+  orientation: number; // Orientation angle in degrees (0-360)
   isSelected: boolean;
 }
 

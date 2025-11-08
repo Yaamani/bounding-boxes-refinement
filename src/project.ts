@@ -1,14 +1,19 @@
-import type { BoundingBox, InputFormat1, InputFormat2, SaveFileFormat } from './types.js';
-import { appState, generateId, setCurrentImage } from './state.js';
-import { renderCanvas, resizeCanvasToContainer } from './canvas.js';
-import { deselectAllBoxes, closeBoxEditor } from './boxes.js';
-import { updateUI, hideWelcomeScreen } from './ui.js';
+import type {
+  BoundingBox,
+  InputFormat1,
+  InputFormat2,
+  SaveFileFormat,
+} from "./types.js";
+import { appState, generateId, setCurrentImage } from "./state.js";
+import { renderCanvas, resizeCanvasToContainer } from "./canvas.js";
+import { deselectAllBoxes, closeBoxEditor } from "./boxes.js";
+import { updateUI, hideWelcomeScreen } from "./ui.js";
 
 // Handle new project
 export async function handleNewProject() {
-  console.log('handleNewProject invoked');
+  console.log("handleNewProject invoked");
   const imageFolder = await window.electronAPI.selectImageFolder();
-  console.log('selected image folder:', imageFolder);
+  console.log("selected image folder:", imageFolder);
   if (!imageFolder) return;
 
   const jsonFolders = await window.electronAPI.selectJsonFolders();
@@ -48,8 +53,8 @@ export async function handleOpenProject() {
       });
     }
   } catch (error) {
-    console.error('Error opening project:', error);
-    alert('Failed to open project file.');
+    console.error("Error opening project:", error);
+    alert("Failed to open project file.");
   }
 }
 
@@ -80,10 +85,12 @@ export async function loadProject() {
   appState.images = [];
 
   // Read all image files
-  const imageFiles = await window.electronAPI.readDirectory(appState.imageFolder);
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp'];
-  const validImages = imageFiles.filter(file =>
-    imageExtensions.some(ext => file.toLowerCase().endsWith(ext))
+  const imageFiles = await window.electronAPI.readDirectory(
+    appState.imageFolder
+  );
+  const imageExtensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp"];
+  const validImages = imageFiles.filter((file) =>
+    imageExtensions.some((ext) => file.toLowerCase().endsWith(ext))
   );
 
   // Create a map to store boxes for each image
@@ -92,11 +99,16 @@ export async function loadProject() {
   // Read all JSON files from all folders
   for (const jsonFolder of appState.jsonFolders) {
     const jsonFiles = await window.electronAPI.readDirectory(jsonFolder);
-    const validJsonFiles = jsonFiles.filter(file => file.toLowerCase().endsWith('.json'));
+    const validJsonFiles = jsonFiles.filter((file) =>
+      file.toLowerCase().endsWith(".json")
+    );
 
     for (const jsonFile of validJsonFiles) {
       try {
-        const jsonPath = await window.electronAPI.pathJoin(jsonFolder, jsonFile);
+        const jsonPath = await window.electronAPI.pathJoin(
+          jsonFolder,
+          jsonFile
+        );
         const content = await window.electronAPI.readFile(jsonPath);
         const data = JSON.parse(content);
 
@@ -117,11 +129,14 @@ export async function loadProject() {
 
   // Create image data entries
   for (const imageFile of validImages) {
-    const fullPath = await window.electronAPI.pathJoin(appState.imageFolder, imageFile);
+    const fullPath = await window.electronAPI.pathJoin(
+      appState.imageFolder,
+      imageFile
+    );
     appState.images.push({
       path: fullPath,
       fileName: imageFile,
-      boxes: imageBoxMap.get(imageFile) || []
+      boxes: imageBoxMap.get(imageFile) || [],
     });
   }
 
@@ -133,7 +148,12 @@ function parseJsonFormat(data: any): BoundingBox[] {
   const boxes: BoundingBox[] = [];
 
   // Check for Format 1 (rec_texts and rec_polys)
-  if (data.rec_texts && data.rec_polys && Array.isArray(data.rec_texts) && Array.isArray(data.rec_polys)) {
+  if (
+    data.rec_texts &&
+    data.rec_polys &&
+    Array.isArray(data.rec_texts) &&
+    Array.isArray(data.rec_polys)
+  ) {
     const format1 = data as InputFormat1;
     for (let i = 0; i < format1.rec_texts.length; i++) {
       if (i < format1.rec_polys.length) {
@@ -142,11 +162,18 @@ function parseJsonFormat(data: any): BoundingBox[] {
           const bbox = polygonToBoundingBox(poly);
           // const bbox = polygonToBoundingBoxSimple(poly);
           const text = format1.rec_texts[i];
+          // Extract orientation angle, default to 0 if not available
+          const orientation =
+            data.textline_orientation_angles &&
+            i < data.textline_orientation_angles.length
+              ? data.textline_orientation_angles[i]
+              : 0;
           boxes.push({
             id: generateId(),
-            data: text || '',
+            data: text || "",
             coordinate: bbox,
-            isSelected: false
+            orientation: orientation,
+            isSelected: false,
           });
         }
       }
@@ -159,9 +186,10 @@ function parseJsonFormat(data: any): BoundingBox[] {
       if (box.coordinate && box.coordinate.length === 4) {
         boxes.push({
           id: generateId(),
-          data: box.label || '',
+          data: box.label || "",
           coordinate: box.coordinate,
-          isSelected: false
+          orientation: 0, // Format 2 doesn't have orientation, default to 0
+          isSelected: false,
         });
       }
     }
@@ -171,7 +199,9 @@ function parseJsonFormat(data: any): BoundingBox[] {
 }
 
 // Get the first 4 coordinates of a polygon as bounding box
-function polygonToBoundingBoxSimple(poly: [number, number][]): [number, number, number, number] {
+function polygonToBoundingBoxSimple(
+  poly: [number, number][]
+): [number, number, number, number] {
   if (poly.length < 2) return [0, 0, 0, 0];
   const x1 = poly[0]![0];
   const y1 = poly[0]![1];
@@ -181,7 +211,9 @@ function polygonToBoundingBoxSimple(poly: [number, number][]): [number, number, 
 }
 
 // Convert polygon to bounding box
-function polygonToBoundingBox(poly: [number, number][]): [number, number, number, number] {
+function polygonToBoundingBox(
+  poly: [number, number][]
+): [number, number, number, number] {
   if (poly.length === 0) return [0, 0, 0, 0];
 
   let minX = Infinity;
@@ -201,7 +233,10 @@ function polygonToBoundingBox(poly: [number, number][]): [number, number, number
 
 // Load current image
 export async function loadCurrentImage(onLoad: () => void) {
-  if (appState.currentImageIndex < 0 || appState.currentImageIndex >= appState.images.length) {
+  if (
+    appState.currentImageIndex < 0 ||
+    appState.currentImageIndex >= appState.images.length
+  ) {
     return;
   }
 
@@ -216,12 +251,12 @@ export async function loadCurrentImage(onLoad: () => void) {
   };
 
   img.onerror = () => {
-    console.error('Failed to load image:', imageData.path);
-    alert('Failed to load image: ' + imageData.fileName);
+    console.error("Failed to load image:", imageData.path);
+    alert("Failed to load image: " + imageData.fileName);
   };
 
   // Convert file path to file:// URL for loading
-  img.src = 'file:///' + imageData.path.replace(/\\/g, '/');
+  img.src = "file:///" + imageData.path.replace(/\\/g, "/");
 }
 
 // Load project from save file
@@ -235,20 +270,24 @@ export async function loadProjectFromFile(filePath: string): Promise<void> {
   // Convert save format to internal format
   appState.images = [];
   for (const item of saveData) {
-    const fullImagePath = await window.electronAPI.pathJoin(baseDir, item.image_path);
+    const fullImagePath = await window.electronAPI.pathJoin(
+      baseDir,
+      item.image_path
+    );
     const fileName = item.image_path.split(/[\\/]/).pop() || item.image_path;
 
     const boxes: BoundingBox[] = item.polygons.map((poly, idx) => ({
       id: generateId(),
       data: poly.data,
       coordinate: poly.coordinate,
-      isSelected: false
+      orientation: poly.orientation || 0,
+      isSelected: false,
     }));
 
     appState.images.push({
       path: fullImagePath,
       fileName: fileName,
-      boxes: boxes
+      boxes: boxes,
     });
   }
 
@@ -274,10 +313,11 @@ export async function saveToFile(filePath: string) {
 
     saveData.push({
       image_path: relativePath,
-      polygons: image.boxes.map(box => ({
+      polygons: image.boxes.map((box) => ({
         data: box.data,
-        coordinate: box.coordinate
-      }))
+        coordinate: box.coordinate,
+        orientation: box.orientation,
+      })),
     });
   }
 
@@ -285,5 +325,5 @@ export async function saveToFile(filePath: string) {
   await window.electronAPI.writeFile(filePath, content);
 
   appState.isModified = false;
-  console.log('Project saved successfully');
+  console.log("Project saved successfully");
 }
