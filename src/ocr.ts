@@ -20,12 +20,12 @@ export interface OCRResult {
 /**
  * Send an image to the OCR server and get text recognition results
  * @param imageBlob - The image blob to recognize
- * @param manualOrientation - Optional manual orientation parameter (0, 90, 180, 270)
+ * @param orientation - Optional manual orientation parameter (0, 90, 180, 270) or 'auto' for automatic classification
  * @returns OCR result with text and orientation, or null if failed
  */
 export async function recognizeTextFromImage(
   imageBlob: Blob,
-  manualOrientation?: number
+  orientation?: number | "auto"
 ): Promise<OCRResult | null> {
   try {
     const formData = new FormData();
@@ -34,10 +34,14 @@ export async function recognizeTextFromImage(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const query =
-      manualOrientation !== undefined
-        ? `?classify_image_orientation=true&orientation=${manualOrientation}`
-        : `?classify_image_orientation=true`;
+    let query: string = "";
+    if (orientation === "auto") {
+      // Auto classification: tell server to classify orientation
+      query = `?classify_image_orientation=true`;
+    } else if (typeof orientation === "number") {
+      // Manual orientation: pass specific orientation without classification
+      query = `?orientation=${orientation}`;
+    }
 
     const response = await fetch(`${OCR_SERVER_URL}${OCR_ENDPOINT}${query}`, {
       method: "POST",
@@ -65,14 +69,17 @@ export async function recognizeTextFromImage(
       .filter((text: string) => text && text.trim())
       .join(" ");
 
-    // Extract orientation angle if available, or use manual orientation if provided
-    let orientationAngle =
-      manualOrientation !== undefined ? manualOrientation : 0;
-    if (
-      !manualOrientation &&
+    // Extract orientation angle if available
+    let orientationAngle = 0;
+    if (typeof orientation === "number") {
+      // If manual orientation was specified, use it
+      orientationAngle = orientation;
+    } else if (
+      (orientation === "auto" || orientation === undefined) &&
       data.orientation_classification &&
       data.orientation_classification.detected_orientation
     ) {
+      // If auto or not specified, try to get detected orientation from server
       orientationAngle =
         parseInt(data.orientation_classification.detected_orientation, 10) || 0;
     }

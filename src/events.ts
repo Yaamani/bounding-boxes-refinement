@@ -473,7 +473,10 @@ export function handleBoxManualOCR(boxId: string) {
 }
 
 // Handle orientation selection and perform OCR
-export async function performManualOCR(boxId: string, orientation: number) {
+export async function performManualOCR(
+  boxId: string,
+  orientation: number | "auto"
+) {
   if (appState.currentImageIndex < 0) return;
 
   const imageData = appState.images[appState.currentImageIndex];
@@ -499,7 +502,9 @@ export async function performManualOCR(boxId: string, orientation: number) {
       throw new Error("Failed to extract bounding box image");
     }
 
-    // Send to OCR server with manual orientation
+    // Send to OCR server with selected orientation option
+    // "auto" means tell server to classify orientation
+    // number means tell server to use that specific orientation
     const ocrResult = await recognizeTextFromImage(imageBlob, orientation);
 
     if (ocrResult) {
@@ -681,7 +686,9 @@ export function setupDelegatedEventListeners() {
           'input[name="orientation"]:checked'
         ) as HTMLInputElement;
         if (selectedRadio) {
-          const orientation = parseInt(selectedRadio.value, 10);
+          const selectedValue = selectedRadio.value;
+          const orientation: number | "auto" =
+            selectedValue === "auto" ? "auto" : parseInt(selectedValue, 10);
           const boxId = orientationModal.dataset.boxId;
           if (boxId) {
             performManualOCR(boxId, orientation);
