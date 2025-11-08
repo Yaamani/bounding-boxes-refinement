@@ -260,27 +260,27 @@ export function handleKeyDown(e: KeyboardEvent) {
       handleSave();
     }
   }
-  // Arrow keys for navigation
-  else if (e.key === "ArrowLeft" && appState.currentImageIndex > 0) {
-    appState.currentImageIndex--;
-    deselectAllBoxes();
-    closeBoxEditor();
-    loadCurrentImage(() => {
-      renderCanvas(appState);
-    });
-    updateUI();
-  } else if (
-    e.key === "ArrowRight" &&
-    appState.currentImageIndex < appState.images.length - 1
-  ) {
-    appState.currentImageIndex++;
-    deselectAllBoxes();
-    closeBoxEditor();
-    loadCurrentImage(() => {
-      renderCanvas(appState);
-    });
-    updateUI();
-  }
+  // // Arrow keys for navigation
+  // else if (e.key === "ArrowLeft" && appState.currentImageIndex > 0) {
+  //   appState.currentImageIndex--;
+  //   deselectAllBoxes();
+  //   closeBoxEditor();
+  //   loadCurrentImage(() => {
+  //     renderCanvas(appState);
+  //   });
+  //   updateUI();
+  // } else if (
+  //   e.key === "ArrowRight" &&
+  //   appState.currentImageIndex < appState.images.length - 1
+  // ) {
+  //   appState.currentImageIndex++;
+  //   deselectAllBoxes();
+  //   closeBoxEditor();
+  //   loadCurrentImage(() => {
+  //     renderCanvas(appState);
+  //   });
+  //   updateUI();
+  // }
   // Mode shortcuts
   else if (e.key === "p") {
     setMode("pan");
