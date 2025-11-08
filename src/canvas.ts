@@ -12,6 +12,7 @@ import {
   setOffsetX,
   setOffsetY,
   setScale,
+  showBoxLabels,
 } from "./state.js";
 
 // Render canvas
@@ -104,7 +105,7 @@ function drawBoundingBox(
   }
 
   // Draw label
-  if (box.data) {
+  if (box.data && showBoxLabels) {
     ctx.fillStyle = box.isSelected ? "#00ff00" : "#ff0000";
     ctx.font = "12px sans-serif";
     const text =
@@ -271,22 +272,19 @@ export async function extractBoundingBoxImage(
 
   // Convert canvas to blob
   return new Promise((resolve) => {
-    tempCanvas.toBlob(
-      (blob) => {
-        resolve(blob);
-        // For debugging
-        // if (blob) {
-        //   const url = URL.createObjectURL(blob);
-        //   const a = document.createElement('a');
-        //   a.href = url;
-        //   a.download = `bounding-box-${Date.now()}.png`;
-        //   document.body.appendChild(a);
-        //   a.click();
-        //   document.body.removeChild(a);
-        //   URL.revokeObjectURL(url);
-        // }
-      },
-      "image/png"
-    );
+    tempCanvas.toBlob((blob) => {
+      resolve(blob);
+      // For debugging
+      // if (blob) {
+      //   const url = URL.createObjectURL(blob);
+      //   const a = document.createElement('a');
+      //   a.href = url;
+      //   a.download = `bounding-box-${Date.now()}.png`;
+      //   document.body.appendChild(a);
+      //   a.click();
+      //   document.body.removeChild(a);
+      //   URL.revokeObjectURL(url);
+      // }
+    }, "image/png");
   });
 }

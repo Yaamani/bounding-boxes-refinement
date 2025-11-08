@@ -1,5 +1,5 @@
 // Imports
-import { setCanvas, appState, setMode } from "./state.js";
+import { setCanvas, appState, setMode, setShowBoxLabels } from "./state.js";
 import {
   renderCanvas,
   resizeCanvasToContainer,
@@ -117,6 +117,15 @@ function setupEventListeners() {
   document
     .getElementById("draw-mode-btn")!
     .addEventListener("click", () => setMode("draw"));
+
+  // Show labels checkbox
+  document
+    .getElementById("show-labels-checkbox")!
+    .addEventListener("change", (e) => {
+      const checkbox = e.target as HTMLInputElement;
+      setShowBoxLabels(checkbox.checked);
+      renderCanvas(appState);
+    });
 
   // Canvas events
   const canvas = document.getElementById("main-canvas") as HTMLCanvasElement;

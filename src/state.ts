@@ -24,6 +24,7 @@ export let drawingBox: { startX: number; startY: number } | null = null;
 export let selectedBoxId: string | null = null;
 export let resizingBox: { id: string; handle: string } | null = null;
 export let previousModeForMiddleMouse: "select" | "pan" | "draw" | null = null;
+export let showBoxLabels = true;
 
 // Setters for canvas state
 export function setCanvas(
@@ -98,6 +99,10 @@ export function setPreviousModeForMiddleMouse(
   mode: "select" | "pan" | "draw" | null
 ) {
   previousModeForMiddleMouse = mode;
+}
+
+export function setShowBoxLabels(show: boolean) {
+  showBoxLabels = show;
 }
 
 // Mark as modified
