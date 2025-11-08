@@ -23,7 +23,7 @@ import {
   handleImageSearch,
   handleKeyDown,
   setupDelegatedEventListeners,
-  handleApplyBoxEdit,
+  handleInstantBoxEdit,
 } from "./events.js";
 
 // Initialize the application
@@ -125,16 +125,34 @@ function setupEventListeners() {
   canvas.addEventListener("mouseup", handleCanvasMouseUp);
   canvas.addEventListener("wheel", handleCanvasWheel, { passive: false });
 
-  // Box editor
+  // Box editor - attach instant update listeners
   document
     .getElementById("add-box-btn")!
     .addEventListener("click", () => setMode("draw"));
   document
     .getElementById("close-editor-btn")!
     .addEventListener("click", closeBoxEditor);
-  document
-    .getElementById("apply-box-btn")!
-    .addEventListener("click", handleApplyBoxEdit);
+
+  // Add event listeners for instant updates on box editor inputs
+  const boxDataInput = document.getElementById(
+    "box-data-input"
+  ) as HTMLTextAreaElement;
+  const coordX1 = document.getElementById("coord-x1") as HTMLInputElement;
+  const coordY1 = document.getElementById("coord-y1") as HTMLInputElement;
+  const coordX2 = document.getElementById("coord-x2") as HTMLInputElement;
+  const coordY2 = document.getElementById("coord-y2") as HTMLInputElement;
+  const orientationInput = document.getElementById(
+    "orientation-input"
+  ) as HTMLSelectElement;
+
+  if (boxDataInput)
+    boxDataInput.addEventListener("input", handleInstantBoxEdit);
+  if (coordX1) coordX1.addEventListener("change", handleInstantBoxEdit);
+  if (coordY1) coordY1.addEventListener("change", handleInstantBoxEdit);
+  if (coordX2) coordX2.addEventListener("change", handleInstantBoxEdit);
+  if (coordY2) coordY2.addEventListener("change", handleInstantBoxEdit);
+  if (orientationInput)
+    orientationInput.addEventListener("change", handleInstantBoxEdit);
 
   // Image search
   document

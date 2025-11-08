@@ -334,8 +334,8 @@ export function handleBoxDeleteFromList(boxId: string) {
   renderCanvas(appState);
 }
 
-// Apply box edit wrapper
-export function handleApplyBoxEdit() {
+// Apply box edit instantly on any change
+export function handleInstantBoxEdit() {
   applyBoxEdit();
   updateBoxList();
   renderCanvas(appState);
