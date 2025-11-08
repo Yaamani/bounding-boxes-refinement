@@ -65,8 +65,17 @@ function drawBoundingBox(
   const canvasX2 = imgX + x2 * imgScale;
   const canvasY2 = imgY + y2 * imgScale;
 
-  // Draw box
-  ctx.strokeStyle = box.isSelected ? "#00ff00" : "#ff0000";
+  // Calculate box dimensions to determine color
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
+  const isPortrait = height > width;
+
+  // Draw box - use different colors for portrait vs landscape
+  if (box.isSelected) {
+    ctx.strokeStyle = "#00ff00"; // Keep selected boxes green
+  } else {
+    ctx.strokeStyle = isPortrait ? "#0099ff" : "#ff0000"; // Blue for portrait (height > width), Red for landscape
+  }
   ctx.lineWidth = box.isSelected ? 3 : 2;
   ctx.strokeRect(canvasX1, canvasY1, canvasX2 - canvasX1, canvasY2 - canvasY1);
 
@@ -106,7 +115,12 @@ function drawBoundingBox(
 
   // Draw label
   if (box.data && showBoxLabels) {
-    ctx.fillStyle = box.isSelected ? "#00ff00" : "#ff0000";
+    // Use same color logic for label background as box outline
+    if (box.isSelected) {
+      ctx.fillStyle = "#00ff00";
+    } else {
+      ctx.fillStyle = isPortrait ? "#0099ff" : "#ff0000";
+    }
     ctx.font = "12px sans-serif";
     const text =
       box.data.substring(0, 20) + (box.data.length > 20 ? "..." : "");
