@@ -235,7 +235,7 @@ export function handleCanvasWheel(e: WheelEvent) {
     renderCanvas(appState);
   } else {
     // Default wheel => pan vertically
-    setOffsetY(offsetY + (e.deltaY > 0 ? panSpeed : -panSpeed));
+    setOffsetY(offsetY + (e.deltaY > 0 ? -panSpeed : panSpeed));
     constrainOffsets();
     renderCanvas(appState);
   }
