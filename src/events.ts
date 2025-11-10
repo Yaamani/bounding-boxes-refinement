@@ -25,6 +25,9 @@ import {
   setHasUnsavedBoxChanges,
   toggleImageCheckedStatus,
   markAsModified,
+  toggleBoxSelection,
+  clearBoxSelection,
+  getSelectedBoxIds,
 } from "./state.js";
 import {
   renderCanvas,
@@ -49,7 +52,12 @@ import {
   applyBoxEdit,
   updateCoordinateFields,
 } from "./boxes.js";
-import { updateUI, updateBoxList, updateImageList } from "./ui.js";
+import {
+  updateUI,
+  updateBoxList,
+  updateImageList,
+  updateEditorPanel,
+} from "./ui.js";
 import { recognizeTextFromImage } from "./ocr.js";
 
 // Canvas mouse down handler
@@ -81,16 +89,27 @@ export function handleCanvasMouseDown(e: MouseEvent) {
       // Check if clicking on a box
       const clickedBox = getBoxAtPosition(mouseX, mouseY);
       if (clickedBox) {
-        selectBox(clickedBox.id);
-        showBoxEditor(clickedBox.id);
+        // Handle multi-selection with Ctrl key
+        toggleBoxSelection(clickedBox.id, e.ctrlKey);
+
+        // Show appropriate editor (single or multi)
+        const selectedIds = getSelectedBoxIds();
+        if (selectedIds.length === 1) {
+          showBoxEditor(clickedBox.id);
+        } else {
+          closeBoxEditor();
+        }
+
         updateBoxList();
+        updateEditorPanel();
         renderCanvas(appState);
         setIsDragging(true);
         setDragStart(mouseX, mouseY);
       } else {
-        deselectAllBoxes();
+        clearBoxSelection();
         closeBoxEditor();
         updateBoxList();
+        updateEditorPanel();
         renderCanvas(appState);
       }
     }
@@ -353,10 +372,20 @@ export function performImageNavigation(index: number) {
 }
 
 // Handle box list item click
-export function handleBoxItemClick(boxId: string) {
-  selectBox(boxId);
-  showBoxEditor(boxId);
+export function handleBoxItemClick(boxId: string, ctrlKey: boolean = false) {
+  // Handle multi-selection with Ctrl key
+  toggleBoxSelection(boxId, ctrlKey);
+
+  // Show appropriate editor (single or multi)
+  const selectedIds = getSelectedBoxIds();
+  if (selectedIds.length === 1) {
+    showBoxEditor(boxId);
+  } else {
+    closeBoxEditor();
+  }
+
   updateBoxList();
+  updateEditorPanel();
   renderCanvas(appState);
 }
 
@@ -552,6 +581,115 @@ export async function performManualOCR(
   }
 }
 
+// Handle multi-box delete operation
+export function handleMultiBoxDelete() {
+  const selectedIds = getSelectedBoxIds();
+  if (selectedIds.length === 0) return;
+
+  const confirmMessage = `Are you sure you want to delete ${selectedIds.length} selected bounding boxes?\n\nThis action cannot be undone.`;
+
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+
+  if (appState.currentImageIndex < 0) return;
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  // Remove all selected boxes
+  imageData.boxes = imageData.boxes.filter(
+    (box) => !selectedIds.includes(box.id)
+  );
+
+  // Clear selection
+  clearBoxSelection();
+
+  // Mark as modified
+  markAsModified();
+  setHasUnsavedBoxChanges(true);
+
+  // Update UI
+  updateBoxList();
+  updateEditorPanel();
+  renderCanvas(appState);
+}
+
+// Handle multi-box OCR operation
+export async function handleMultiBoxOCR() {
+  const selectedIds = getSelectedBoxIds();
+  if (selectedIds.length === 0) return;
+
+  // Show orientation modal
+  const modal = document.getElementById(
+    "orientation-modal"
+  ) as HTMLDialogElement;
+  if (!modal) return;
+
+  // Store "multi" to indicate batch operation
+  modal.dataset.boxId = "multi";
+  modal.dataset.boxIds = JSON.stringify(selectedIds);
+
+  // Show the modal
+  modal.showModal();
+}
+
+// Perform batch OCR on multiple boxes
+export async function performMultiBoxOCR(
+  boxIds: string[],
+  orientation: number | "auto"
+) {
+  if (appState.currentImageIndex < 0) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData || !currentImage) return;
+
+  let successCount = 0;
+  let failCount = 0;
+
+  // Process each box
+  for (const boxId of boxIds) {
+    const box = imageData.boxes.find((b) => b.id === boxId);
+    if (!box) continue;
+
+    try {
+      // Extract the bounding box image
+      const imageBlob = await extractBoundingBoxImage(box);
+      if (!imageBlob) {
+        throw new Error("Failed to extract bounding box image");
+      }
+
+      // Send to OCR server
+      const ocrResult = await recognizeTextFromImage(imageBlob, orientation);
+
+      if (ocrResult) {
+        // Update the box data with recognized text and orientation
+        box.data = ocrResult.text;
+        box.orientation = ocrResult.orientation;
+        successCount++;
+      } else {
+        failCount++;
+      }
+    } catch (error) {
+      console.error(`OCR error for box ${boxId}:`, error);
+      failCount++;
+    }
+  }
+
+  // Mark as modified if any boxes were updated
+  if (successCount > 0) {
+    markAsModified();
+    setHasUnsavedBoxChanges(true);
+
+    // Update UI
+    updateBoxList();
+    renderCanvas(appState);
+  }
+
+  // Show results
+  const message = `OCR Batch Results:\n✅ Success: ${successCount}\n❌ Failed: ${failCount}`;
+  alert(message);
+}
+
 // Setup delegated event listeners for dynamically created elements
 export function setupDelegatedEventListeners() {
   // Image list click delegation
@@ -637,7 +775,7 @@ export function setupDelegatedEventListeners() {
         if (index >= 0 && appState.currentImageIndex >= 0) {
           const imageData = appState.images[appState.currentImageIndex];
           if (imageData && imageData.boxes[index]) {
-            handleBoxItemClick(imageData.boxes[index].id);
+            handleBoxItemClick(imageData.boxes[index].id, e.ctrlKey);
           }
         }
       }
@@ -667,7 +805,7 @@ export function setupDelegatedEventListeners() {
       if (index >= 0 && appState.currentImageIndex >= 0) {
         const imageData = appState.images[appState.currentImageIndex];
         if (imageData && imageData.boxes[index]) {
-          handleBoxItemClick(imageData.boxes[index].id);
+          handleBoxItemClick(imageData.boxes[index].id, e.ctrlKey);
         }
       }
     }
@@ -690,7 +828,16 @@ export function setupDelegatedEventListeners() {
           const orientation: number | "auto" =
             selectedValue === "auto" ? "auto" : parseInt(selectedValue, 10);
           const boxId = orientationModal.dataset.boxId;
-          if (boxId) {
+
+          // Check if this is a multi-box operation
+          if (boxId === "multi") {
+            const boxIdsJson = orientationModal.dataset.boxIds;
+            if (boxIdsJson) {
+              const boxIds = JSON.parse(boxIdsJson) as string[];
+              performMultiBoxOCR(boxIds, orientation);
+              orientationModal.close();
+            }
+          } else if (boxId) {
             performManualOCR(boxId, orientation);
             orientationModal.close();
           }

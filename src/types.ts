@@ -50,6 +50,7 @@ export interface AppState {
   currentImageIndex: number;
   currentSaveFile: string | null;
   isModified: boolean;
+  selectedBoxIds: string[]; // Array of selected box IDs for multi-selection
 }
 
 // Electron API interface

@@ -8,6 +8,7 @@ export const appState: AppState = {
   currentImageIndex: -1,
   currentSaveFile: null,
   isModified: false,
+  selectedBoxIds: [], // Initialize empty array for multi-selection
 };
 
 // Canvas state
@@ -90,6 +91,49 @@ export function setDrawingBox(box: { startX: number; startY: number } | null) {
 
 export function setSelectedBoxId(id: string | null) {
   selectedBoxId = id;
+  // When setting a single selected box, update the selectedBoxIds array
+  if (id === null) {
+    appState.selectedBoxIds = [];
+  } else {
+    appState.selectedBoxIds = [id];
+  }
+}
+
+// Multi-selection helpers
+export function toggleBoxSelection(boxId: string, ctrlKey: boolean) {
+  if (ctrlKey) {
+    // Toggle selection with Ctrl key
+    const index = appState.selectedBoxIds.indexOf(boxId);
+    if (index > -1) {
+      // Deselect if already selected
+      appState.selectedBoxIds.splice(index, 1);
+    } else {
+      // Add to selection
+      appState.selectedBoxIds.push(boxId);
+    }
+  } else {
+    // Single selection without Ctrl key
+    appState.selectedBoxIds = [boxId];
+  }
+
+  // Update legacy selectedBoxId for backward compatibility
+  selectedBoxId =
+    appState.selectedBoxIds.length === 1
+      ? appState.selectedBoxIds[0] ?? null
+      : null;
+}
+
+export function clearBoxSelection() {
+  appState.selectedBoxIds = [];
+  selectedBoxId = null;
+}
+
+export function getSelectedBoxIds(): string[] {
+  return appState.selectedBoxIds;
+}
+
+export function isBoxSelected(boxId: string): boolean {
+  return appState.selectedBoxIds.includes(boxId);
 }
 
 export function setResizingBox(box: { id: string; handle: string } | null) {

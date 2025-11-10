@@ -1,4 +1,9 @@
-import { appState, selectedBoxId } from "./state.js";
+import {
+  appState,
+  selectedBoxId,
+  getSelectedBoxIds,
+  isBoxSelected,
+} from "./state.js";
 
 // Update UI
 export function updateUI() {
@@ -97,7 +102,9 @@ export function updateBoxList() {
     item.className =
       "card bg-base-100 shadow-sm mb-2 hover:shadow-md transition-shadow";
     item.id = `box-${box.id}`;
-    if (box.isSelected) {
+
+    // Highlight if box is selected (supports multi-selection)
+    if (isBoxSelected(box.id)) {
       item.classList.add("ring", "ring-primary");
     }
 
@@ -190,11 +197,40 @@ export function updateBoxList() {
   });
 
   // Scroll to selected box if exists
-  if (selectedBoxId) {
-    const selectedItem = document.getElementById(`box-${selectedBoxId}`);
-    if (selectedItem) {
-      selectedItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const selectedIds = getSelectedBoxIds();
+  if (selectedIds.length > 0) {
+    const firstSelectedItem = document.getElementById(`box-${selectedIds[0]}`);
+    if (firstSelectedItem) {
+      firstSelectedItem.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
+  }
+}
+
+// Update editor panel to show single or multi-box editor
+export function updateEditorPanel() {
+  const selectedIds = getSelectedBoxIds();
+  const boxEditor = document.getElementById("box-editor")!;
+  const multiBoxEditor = document.getElementById("multi-box-editor")!;
+
+  if (selectedIds.length === 0) {
+    // No selection - hide both editors
+    boxEditor.style.display = "none";
+    multiBoxEditor.style.display = "none";
+  } else if (selectedIds.length === 1) {
+    // Single selection - show single box editor
+    boxEditor.style.display = "block";
+    multiBoxEditor.style.display = "none";
+  } else {
+    // Multi selection - show multi-box editor
+    boxEditor.style.display = "none";
+    multiBoxEditor.style.display = "block";
+
+    // Update count display
+    const countElement = document.getElementById("multi-box-count")!;
+    countElement.textContent = selectedIds.length.toString();
   }
 }
 

@@ -1,5 +1,11 @@
 // Imports
-import { setCanvas, appState, setMode, setShowBoxLabels } from "./state.js";
+import {
+  setCanvas,
+  appState,
+  setMode,
+  setShowBoxLabels,
+  clearBoxSelection,
+} from "./state.js";
 import {
   renderCanvas,
   resizeCanvasToContainer,
@@ -14,7 +20,7 @@ import {
   handleSaveAs,
 } from "./project.js";
 import { closeBoxEditor, deleteSelectedBox } from "./boxes.js";
-import { updateUI, updateBoxList } from "./ui.js";
+import { updateUI, updateBoxList, updateEditorPanel } from "./ui.js";
 import {
   handleCanvasMouseDown,
   handleCanvasMouseMove,
@@ -24,6 +30,8 @@ import {
   handleKeyDown,
   setupDelegatedEventListeners,
   handleInstantBoxEdit,
+  handleMultiBoxDelete,
+  handleMultiBoxOCR,
 } from "./events.js";
 
 // Initialize the application
@@ -141,6 +149,22 @@ function setupEventListeners() {
   document
     .getElementById("close-editor-btn")!
     .addEventListener("click", closeBoxEditor);
+
+  // Multi-box editor
+  document
+    .getElementById("close-multi-editor-btn")!
+    .addEventListener("click", () => {
+      clearBoxSelection();
+      updateBoxList();
+      updateEditorPanel();
+      renderCanvas(appState);
+    });
+  document
+    .getElementById("multi-delete-btn")!
+    .addEventListener("click", handleMultiBoxDelete);
+  document
+    .getElementById("multi-recognize-btn")!
+    .addEventListener("click", handleMultiBoxOCR);
 
   // Add event listeners for instant updates on box editor inputs
   const boxDataInput = document.getElementById(

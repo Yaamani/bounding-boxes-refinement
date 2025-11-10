@@ -13,6 +13,7 @@ import {
   setOffsetY,
   setScale,
   showBoxLabels,
+  isBoxSelected,
 } from "./state.js";
 import { hasCollision } from "./boxes.js";
 
@@ -74,24 +75,27 @@ function drawBoundingBox(
   // Check if box has collisions
   const hasBoxCollision = hasCollision(box.id);
 
+  // Check if this box is selected (supports multi-selection)
+  const isSelected = isBoxSelected(box.id);
+
   // Draw box - use different colors for portrait vs landscape
-  if (box.isSelected) {
+  if (isSelected) {
     ctx.strokeStyle = "#00ff00"; // Keep selected boxes green
   } else {
     ctx.strokeStyle = isPortrait ? "#0099ff" : "#ff0000"; // Blue for portrait (height > width), Red for landscape
   }
 
-// Use thicker line width for colliding boxes
+  // Use thicker line width for colliding boxes
   if (hasBoxCollision) {
-    ctx.lineWidth = box.isSelected ? 10 : 7;
+    ctx.lineWidth = isSelected ? 10 : 7;
   } else {
-    ctx.lineWidth = box.isSelected ? 3 : 2;
+    ctx.lineWidth = isSelected ? 3 : 2;
   }
 
   ctx.strokeRect(canvasX1, canvasY1, canvasX2 - canvasX1, canvasY2 - canvasY1);
 
   // Draw resize handles if selected
-  if (box.isSelected) {
+  if (isSelected) {
     const handleSize = hasBoxCollision ? 15 : 10;
     ctx.fillStyle = "#00ff00";
     ctx.fillStyle = "#00ff00";
@@ -129,7 +133,7 @@ function drawBoundingBox(
   // Draw label
   if (box.data && showBoxLabels) {
     // Use same color logic for label background as box outline
-    if (box.isSelected) {
+    if (isSelected) {
       ctx.fillStyle = "#00ff00";
     } else {
       ctx.fillStyle = isPortrait ? "#0099ff" : "#ff0000";
