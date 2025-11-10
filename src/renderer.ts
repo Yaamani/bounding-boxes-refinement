@@ -169,7 +169,7 @@ function setupEventListeners() {
     .addEventListener("input", handleImageSearch);
 
   // Keyboard shortcuts
-  // document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("keydown", handleKeyDown);
 
   // Delegate event handling for dynamically created list items
   setupDelegatedEventListeners();

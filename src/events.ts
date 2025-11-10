@@ -248,6 +248,15 @@ export function handleImageSearch() {
 
 // Handle keyboard shortcuts
 export function handleKeyDown(e: KeyboardEvent) {
+  // Check if user is focusing on a text input field
+  const activeElement = document.activeElement;
+  if (
+    activeElement &&
+    (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")
+  ) {
+    return;
+  }
+
   // Delete key
   if (e.key === "Delete" && selectedBoxId) {
     deleteSelectedBox();
@@ -275,27 +284,27 @@ export function handleKeyDown(e: KeyboardEvent) {
       handleSave();
     }
   }
-  // // Arrow keys for navigation
-  // else if (e.key === "ArrowLeft" && appState.currentImageIndex > 0) {
-  //   appState.currentImageIndex--;
-  //   deselectAllBoxes();
-  //   closeBoxEditor();
-  //   loadCurrentImage(() => {
-  //     renderCanvas(appState);
-  //   });
-  //   updateUI();
-  // } else if (
-  //   e.key === "ArrowRight" &&
-  //   appState.currentImageIndex < appState.images.length - 1
-  // ) {
-  //   appState.currentImageIndex++;
-  //   deselectAllBoxes();
-  //   closeBoxEditor();
-  //   loadCurrentImage(() => {
-  //     renderCanvas(appState);
-  //   });
-  //   updateUI();
-  // }
+  // Arrow keys for navigation
+  else if (e.key === "ArrowLeft" && appState.currentImageIndex > 0) {
+    appState.currentImageIndex--;
+    deselectAllBoxes();
+    closeBoxEditor();
+    loadCurrentImage(() => {
+      renderCanvas(appState);
+    });
+    updateUI();
+  } else if (
+    e.key === "ArrowRight" &&
+    appState.currentImageIndex < appState.images.length - 1
+  ) {
+    appState.currentImageIndex++;
+    deselectAllBoxes();
+    closeBoxEditor();
+    loadCurrentImage(() => {
+      renderCanvas(appState);
+    });
+    updateUI();
+  }
   // Mode shortcuts
   else if (e.key === "p") {
     setMode("pan");
