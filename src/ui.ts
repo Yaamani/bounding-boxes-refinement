@@ -330,3 +330,83 @@ export function showConfirmationModal(
     modal.showModal();
   });
 }
+
+// Show alert modal
+export function showAlert(
+  message: string,
+  title: string = "Alert"
+): Promise<void> {
+  return new Promise<void>((resolve) => {
+    // Create modal dialog element
+    const modal = document.createElement("dialog");
+    modal.className = "modal";
+    modal.id = "dynamic-alert-modal";
+
+    // Create modal box
+    const modalBox = document.createElement("div");
+    modalBox.className = "modal-box";
+
+    // Create title
+    const titleElement = document.createElement("h3");
+    titleElement.className = "font-bold text-lg mb-4";
+    titleElement.textContent = title;
+
+    // Create message with support for newlines
+    const messageElement = document.createElement("p");
+    messageElement.className = "py-2 whitespace-pre-wrap";
+    messageElement.textContent = message;
+
+    // Create modal action container
+    const modalAction = document.createElement("div");
+    modalAction.className = "modal-action";
+
+    // Create form for buttons
+    const form = document.createElement("form");
+    form.method = "dialog";
+
+    // Create OK button
+    const okBtn = document.createElement("button");
+    okBtn.className = "btn btn-primary";
+    okBtn.textContent = "OK";
+    okBtn.addEventListener("click", () => {
+      cleanup();
+      resolve();
+    });
+
+    // Create backdrop form
+    const backdropForm = document.createElement("form");
+    backdropForm.method = "dialog";
+    backdropForm.className = "modal-backdrop";
+
+    const backdropBtn = document.createElement("button");
+    backdropBtn.textContent = "Close";
+    backdropBtn.addEventListener("click", () => {
+      cleanup();
+      resolve();
+    });
+
+    // Assemble the modal
+    backdropForm.appendChild(backdropBtn);
+    form.appendChild(okBtn);
+    modalAction.appendChild(form);
+    modalBox.appendChild(titleElement);
+    modalBox.appendChild(messageElement);
+    modalBox.appendChild(modalAction);
+    modal.appendChild(modalBox);
+    modal.appendChild(backdropForm);
+
+    // Add modal to body
+    document.body.appendChild(modal);
+
+    // Cleanup function
+    const cleanup = () => {
+      modal.close();
+      setTimeout(() => {
+        document.body.removeChild(modal);
+      }, 100);
+    };
+
+    // Show modal
+    modal.showModal();
+  });
+}

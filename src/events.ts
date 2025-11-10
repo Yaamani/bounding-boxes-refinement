@@ -57,6 +57,7 @@ import {
   updateImageList,
   updateEditorPanel,
   showConfirmationModal,
+  showAlert,
 } from "./ui.js";
 import { recognizeTextFromImage } from "./ocr.js";
 
@@ -464,10 +465,11 @@ export async function handleBoxOCR(boxId: string) {
     }
   } catch (error) {
     console.error("OCR error:", error);
-    alert(
+    await showAlert(
       `OCR failed: ${
         error instanceof Error ? error.message : "Unknown error"
-      }\n\nMake sure the PaddleOCR server is running`
+      }\n\nMake sure the PaddleOCR server is running`,
+      "OCR Error"
     );
   } finally {
     // Reset button state
@@ -558,10 +560,11 @@ export async function performManualOCR(
     }
   } catch (error) {
     console.error("Manual OCR error:", error);
-    alert(
+    await showAlert(
       `OCR failed: ${
         error instanceof Error ? error.message : "Unknown error"
-      }\n\nMake sure the PaddleOCR server is running`
+      }\n\nMake sure the PaddleOCR server is running`,
+      "OCR Error"
     );
   } finally {
     // Reset button state
@@ -684,7 +687,7 @@ export async function performMultiBoxOCR(
 
   // Show results
   const message = `OCR Batch Results:\n✅ Success: ${successCount}\n❌ Failed: ${failCount}`;
-  alert(message);
+  await showAlert(message, "OCR Batch Complete");
 }
 
 // Setup delegated event listeners for dynamically created elements

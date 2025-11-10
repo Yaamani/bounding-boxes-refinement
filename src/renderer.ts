@@ -20,7 +20,7 @@ import {
   handleSaveAs,
 } from "./project.js";
 import { closeBoxEditor, deleteSelectedBox } from "./boxes.js";
-import { updateUI, updateBoxList, updateEditorPanel } from "./ui.js";
+import { updateUI, updateBoxList, updateEditorPanel, showAlert } from "./ui.js";
 import {
   handleCanvasMouseDown,
   handleCanvasMouseMove,
@@ -77,7 +77,7 @@ async function handleSaveBeforeClose() {
     }
   } catch (error) {
     console.error("Error saving before close:", error);
-    alert("Failed to save the project.");
+    await showAlert("Failed to save the project.", "Save Error");
   }
 }
 

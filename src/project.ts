@@ -12,7 +12,7 @@ import {
 } from "./state.js";
 import { renderCanvas, resizeCanvasToContainer } from "./canvas.js";
 import { deselectAllBoxes, closeBoxEditor } from "./boxes.js";
-import { updateUI, hideWelcomeScreen } from "./ui.js";
+import { updateUI, hideWelcomeScreen, showAlert } from "./ui.js";
 
 // Handle new project
 export async function handleNewProject() {
@@ -59,7 +59,7 @@ export async function handleOpenProject() {
     }
   } catch (error) {
     console.error("Error opening project:", error);
-    alert("Failed to open project file.");
+    await showAlert("Failed to open project file.", "Open Error");
   }
 }
 
@@ -258,7 +258,10 @@ export async function loadCurrentImage(onLoad: () => void) {
 
   img.onerror = () => {
     console.error("Failed to load image:", imageData.path);
-    alert("Failed to load image: " + imageData.fileName);
+    showAlert(
+      "Failed to load image: " + imageData.fileName,
+      "Image Load Error"
+    );
   };
 
   // Convert file path to file:// URL for loading
