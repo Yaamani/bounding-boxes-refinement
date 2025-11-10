@@ -43,6 +43,7 @@ import {
   selectBox,
   deselectAllBoxes,
   deleteSelectedBox,
+  confirmBoxDeletion,
   showBoxEditor,
   closeBoxEditor,
   applyBoxEdit,
@@ -376,6 +377,7 @@ export function handleBoxDeleteFromList(boxId: string) {
 
 // Apply box edit instantly on any change
 export function handleInstantBoxEdit() {
+  debugger;
   applyBoxEdit();
   updateBoxList();
   renderCanvas(appState);
@@ -740,6 +742,33 @@ export function setupDelegatedEventListeners() {
         if (targetIndex >= 0) {
           performImageNavigation(targetIndex);
         }
+      });
+    }
+  }
+
+  // Box delete confirmation modal delegation
+  const boxDeleteModal = document.getElementById(
+    "box-delete-modal"
+  ) as HTMLDialogElement;
+  if (boxDeleteModal) {
+    const confirmBtn = document.getElementById("box-delete-confirm-btn");
+    const cancelBtn = document.getElementById("box-delete-cancel-btn");
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        confirmBoxDeletion();
+        updateUI();
+        updateBoxList();
+        renderCanvas(appState);
+        boxDeleteModal.close();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        boxDeleteModal.close();
       });
     }
   }

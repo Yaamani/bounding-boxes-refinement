@@ -564,6 +564,29 @@
       </form>
     </dialog>
 
+    <!-- Box Delete Confirmation Modal -->
+    <dialog id="box-delete-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Delete Bounding Box?</h3>
+        <p class="py-2">
+          Are you sure you want to delete the bounding box
+          <span id="box-delete-label" class="font-semibold"></span>?
+        </p>
+        <p class="py-2 text-sm opacity-70">This action cannot be undone.</p>
+        <div class="modal-action">
+          <form method="dialog">
+            <button id="box-delete-cancel-btn" class="btn">Cancel</button>
+            <button id="box-delete-confirm-btn" class="btn btn-error">
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>Close</button>
+      </form>
+    </dialog>
+
     <script type="module" src="build/renderer.js"></script>
   </body>
 </html>

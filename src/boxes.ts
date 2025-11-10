@@ -234,16 +234,32 @@ export function deleteSelectedBox() {
   const box = imageData.boxes.find((b) => b.id === selectedBoxId);
   if (!box) return;
 
-  // Show confirmation dialog
+  // Show confirmation modal
   const boxLabel =
     box.data ||
     `Box ${imageData.boxes.findIndex((b) => b.id === selectedBoxId) + 1}`;
-  if (
-    !confirm(
-      `Are you sure you want to delete the bounding box "${boxLabel}"?\n\nThis action cannot be undone.`
-    )
-  )
-    return;
+
+  // Update modal with box label
+  const labelElement = document.getElementById("box-delete-label");
+  if (labelElement) {
+    labelElement.textContent = `"${boxLabel}"`;
+  }
+
+  // Show the modal
+  const modal = document.getElementById(
+    "box-delete-modal"
+  ) as HTMLDialogElement;
+  if (modal) {
+    modal.showModal();
+  }
+}
+
+// Confirm box deletion
+export function confirmBoxDeletion() {
+  if (appState.currentImageIndex < 0 || !selectedBoxId) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
 
   const index = imageData.boxes.findIndex((b) => b.id === selectedBoxId);
 
