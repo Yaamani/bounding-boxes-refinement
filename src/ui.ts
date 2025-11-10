@@ -239,3 +239,94 @@ export function hideWelcomeScreen() {
   const welcomeScreen = document.getElementById("welcome-screen")!;
   welcomeScreen.style.display = "none";
 }
+
+// Show confirmation modal
+export function showConfirmationModal(
+  title: string,
+  message: string,
+  confirmationButton: { label: string; class: string }
+): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    // Create modal dialog element
+    const modal = document.createElement("dialog");
+    modal.className = "modal";
+    modal.id = "dynamic-confirmation-modal";
+
+    // Create modal box
+    const modalBox = document.createElement("div");
+    modalBox.className = "modal-box";
+
+    // Create title
+    const titleElement = document.createElement("h3");
+    titleElement.className = "font-bold text-lg mb-4";
+    titleElement.textContent = title;
+
+    // Create message
+    const messageElement = document.createElement("p");
+    messageElement.className = "py-2";
+    messageElement.textContent = message;
+
+    // Create modal action container
+    const modalAction = document.createElement("div");
+    modalAction.className = "modal-action";
+
+    // Create form for buttons
+    const form = document.createElement("form");
+    form.method = "dialog";
+
+    // Create cancel button
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.addEventListener("click", () => {
+      cleanup();
+      resolve(false);
+    });
+
+    // Create confirmation button
+    const confirmBtn = document.createElement("button");
+    confirmBtn.className = confirmationButton.class;
+    confirmBtn.textContent = confirmationButton.label;
+    confirmBtn.addEventListener("click", () => {
+      cleanup();
+      resolve(true);
+    });
+
+    // Create backdrop form
+    const backdropForm = document.createElement("form");
+    backdropForm.method = "dialog";
+    backdropForm.className = "modal-backdrop";
+
+    const backdropBtn = document.createElement("button");
+    backdropBtn.textContent = "Close";
+    backdropBtn.addEventListener("click", () => {
+      cleanup();
+      resolve(false);
+    });
+
+    // Assemble the modal
+    backdropForm.appendChild(backdropBtn);
+    form.appendChild(cancelBtn);
+    form.appendChild(confirmBtn);
+    modalAction.appendChild(form);
+    modalBox.appendChild(titleElement);
+    modalBox.appendChild(messageElement);
+    modalBox.appendChild(modalAction);
+    modal.appendChild(modalBox);
+    modal.appendChild(backdropForm);
+
+    // Add modal to body
+    document.body.appendChild(modal);
+
+    // Cleanup function
+    const cleanup = () => {
+      modal.close();
+      setTimeout(() => {
+        document.body.removeChild(modal);
+      }, 100);
+    };
+
+    // Show modal
+    modal.showModal();
+  });
+}

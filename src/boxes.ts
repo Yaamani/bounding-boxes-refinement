@@ -12,6 +12,7 @@ import {
   generateId,
   setHasUnsavedBoxChanges,
 } from "./state.js";
+import { showConfirmationModal } from "./ui.js";
 
 // Get box at position
 export function getBoxAtPosition(x: number, y: number): BoundingBox | null {
@@ -225,7 +226,7 @@ export function deselectAllBoxes() {
 }
 
 // Delete selected box
-export function deleteSelectedBox() {
+export async function deleteSelectedBox() {
   if (appState.currentImageIndex < 0 || !selectedBoxId) return;
 
   const imageData = appState.images[appState.currentImageIndex];
@@ -234,32 +235,15 @@ export function deleteSelectedBox() {
   const box = imageData.boxes.find((b) => b.id === selectedBoxId);
   if (!box) return;
 
-  // Show confirmation modal
-  const boxLabel =
-    box.data ||
-    `Box ${imageData.boxes.findIndex((b) => b.id === selectedBoxId) + 1}`;
-
-  // Update modal with box label
-  const labelElement = document.getElementById("box-delete-label");
-  if (labelElement) {
-    labelElement.textContent = `"${boxLabel}"`;
+  if (
+    !(await showConfirmationModal(
+      "Confirm Delete",
+      `Are you sure you want to delete the bounding box?\n\nThis action cannot be undone.`,
+      { label: "Delete", class: "btn btn-error" },
+    ))
+  ) {
+    return;
   }
-
-  // Show the modal
-  const modal = document.getElementById(
-    "box-delete-modal"
-  ) as HTMLDialogElement;
-  if (modal) {
-    modal.showModal();
-  }
-}
-
-// Confirm box deletion
-export function confirmBoxDeletion() {
-  if (appState.currentImageIndex < 0 || !selectedBoxId) return;
-
-  const imageData = appState.images[appState.currentImageIndex];
-  if (!imageData) return;
 
   const index = imageData.boxes.findIndex((b) => b.id === selectedBoxId);
 

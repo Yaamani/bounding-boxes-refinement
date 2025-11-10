@@ -46,7 +46,6 @@ import {
   selectBox,
   deselectAllBoxes,
   deleteSelectedBox,
-  confirmBoxDeletion,
   showBoxEditor,
   closeBoxEditor,
   applyBoxEdit,
@@ -57,6 +56,7 @@ import {
   updateBoxList,
   updateImageList,
   updateEditorPanel,
+  showConfirmationModal,
 } from "./ui.js";
 import { recognizeTextFromImage } from "./ocr.js";
 
@@ -267,7 +267,7 @@ export function handleImageSearch() {
 }
 
 // Handle keyboard shortcuts
-export function handleKeyDown(e: KeyboardEvent) {
+export async function handleKeyDown(e: KeyboardEvent) {
   // Check if user is focusing on a text input field
   const activeElement = document.activeElement;
   if (
@@ -279,7 +279,7 @@ export function handleKeyDown(e: KeyboardEvent) {
 
   // Delete key
   if (e.key === "Delete" && selectedBoxId) {
-    deleteSelectedBox();
+    await deleteSelectedBox();
     closeBoxEditor();
     updateBoxList();
     renderCanvas(appState);
@@ -306,24 +306,12 @@ export function handleKeyDown(e: KeyboardEvent) {
   }
   // Arrow keys for navigation
   else if (e.key === "ArrowLeft" && appState.currentImageIndex > 0) {
-    appState.currentImageIndex--;
-    deselectAllBoxes();
-    closeBoxEditor();
-    loadCurrentImage(() => {
-      renderCanvas(appState);
-    });
-    updateUI();
+    await handleImageNavigation(appState.currentImageIndex - 1);
   } else if (
     e.key === "ArrowRight" &&
     appState.currentImageIndex < appState.images.length - 1
   ) {
-    appState.currentImageIndex++;
-    deselectAllBoxes();
-    closeBoxEditor();
-    loadCurrentImage(() => {
-      renderCanvas(appState);
-    });
-    updateUI();
+    await handleImageNavigation(appState.currentImageIndex + 1);
   }
   // Mode shortcuts
   else if (e.key === "p") {
@@ -334,7 +322,7 @@ export function handleKeyDown(e: KeyboardEvent) {
 }
 
 // Handle image list item click
-export function handleImageItemClick(index: number) {
+export async function handleImageNavigation(index: number) {
   // If we have unsaved changes and switching to a different image
   if (
     hasUnsavedBoxChanges &&
@@ -343,16 +331,20 @@ export function handleImageItemClick(index: number) {
   ) {
     const previousIndex = appState.currentImageIndex;
 
-    // Show the checked status modal
-    const modal = document.getElementById(
-      "checked-status-modal"
-    ) as HTMLDialogElement;
-    if (modal) {
-      modal.dataset.targetIndex = index.toString();
-      modal.dataset.previousIndex = previousIndex.toString();
-      modal.showModal();
-      return; // Don't navigate yet
+    // Show confirmation modal
+    const confirmed = await showConfirmationModal(
+      "Mark Image as Checked?",
+      "You have made changes to the bounding boxes in this image.\n\nDo you want to mark this image as checked?",
+      { label: "Yes, Mark as Checked", class: "btn btn-primary" }
+    );
+
+    if (confirmed) {
+      toggleImageCheckedStatus(previousIndex);
     }
+
+    // Navigate to the new image
+    performImageNavigation(index);
+    return;
   }
 
   // Normal navigation
@@ -390,7 +382,7 @@ export function handleBoxItemClick(boxId: string, ctrlKey: boolean = false) {
 }
 
 // Handle box delete from list
-export function handleBoxDeleteFromList(boxId: string) {
+export async function handleBoxDeleteFromList(boxId: string) {
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData) return;
 
@@ -398,7 +390,7 @@ export function handleBoxDeleteFromList(boxId: string) {
   if (!box) return;
 
   selectBox(boxId);
-  deleteSelectedBox();
+  await deleteSelectedBox();
   closeBoxEditor();
   updateBoxList();
   renderCanvas(appState);
@@ -582,13 +574,18 @@ export async function performManualOCR(
 }
 
 // Handle multi-box delete operation
-export function handleMultiBoxDelete() {
+export async function handleMultiBoxDelete() {
   const selectedIds = getSelectedBoxIds();
   if (selectedIds.length === 0) return;
 
   const confirmMessage = `Are you sure you want to delete ${selectedIds.length} selected bounding boxes?\n\nThis action cannot be undone.`;
 
-  if (!confirm(confirmMessage)) {
+  if (
+    !(await showConfirmationModal("Confirm Delete", confirmMessage, {
+      label: "Delete",
+      class: "btn btn-error",
+    }))
+  ) {
     return;
   }
 
@@ -708,7 +705,7 @@ export function setupDelegatedEventListeners() {
     if (item) {
       const index = Array.from(item.parentElement!.children).indexOf(item);
       if (index >= 0) {
-        handleImageItemClick(index);
+        handleImageNavigation(index);
       }
     }
   });
@@ -735,7 +732,7 @@ export function setupDelegatedEventListeners() {
   });
 
   // Box list click delegation
-  document.getElementById("box-list")!.addEventListener("click", (e) => {
+  document.getElementById("box-list")!.addEventListener("click", async (e) => {
     const target = e.target as HTMLElement;
 
     // Handle OCR button (must check before btn-primary since OCR button has btn-primary class)
@@ -791,7 +788,7 @@ export function setupDelegatedEventListeners() {
         if (index >= 0 && appState.currentImageIndex >= 0) {
           const imageData = appState.images[appState.currentImageIndex];
           if (imageData && imageData.boxes[index]) {
-            handleBoxDeleteFromList(imageData.boxes[index].id);
+            await handleBoxDeleteFromList(imageData.boxes[index].id);
           }
         }
       }
@@ -842,80 +839,6 @@ export function setupDelegatedEventListeners() {
             orientationModal.close();
           }
         }
-      });
-    }
-  }
-
-  // Checked status modal delegation
-  const checkedModal = document.getElementById(
-    "checked-status-modal"
-  ) as HTMLDialogElement;
-  if (checkedModal) {
-    const yesBtn = document.getElementById("checked-yes-btn");
-    const noBtn = document.getElementById("checked-no-btn");
-
-    if (yesBtn) {
-      yesBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const previousIndex = parseInt(
-          checkedModal.dataset.previousIndex || "-1",
-          10
-        );
-        const targetIndex = parseInt(
-          checkedModal.dataset.targetIndex || "-1",
-          10
-        );
-
-        if (previousIndex >= 0) {
-          toggleImageCheckedStatus(previousIndex);
-        }
-
-        checkedModal.close();
-        if (targetIndex >= 0) {
-          performImageNavigation(targetIndex);
-        }
-      });
-    }
-
-    if (noBtn) {
-      noBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const targetIndex = parseInt(
-          checkedModal.dataset.targetIndex || "-1",
-          10
-        );
-
-        checkedModal.close();
-        if (targetIndex >= 0) {
-          performImageNavigation(targetIndex);
-        }
-      });
-    }
-  }
-
-  // Box delete confirmation modal delegation
-  const boxDeleteModal = document.getElementById(
-    "box-delete-modal"
-  ) as HTMLDialogElement;
-  if (boxDeleteModal) {
-    const confirmBtn = document.getElementById("box-delete-confirm-btn");
-    const cancelBtn = document.getElementById("box-delete-cancel-btn");
-
-    if (confirmBtn) {
-      confirmBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        confirmBoxDeletion();
-        updateUI();
-        updateBoxList();
-        renderCanvas(appState);
-        boxDeleteModal.close();
-      });
-    }
-
-    if (cancelBtn) {
-      cancelBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        boxDeleteModal.close();
       });
     }
   }
