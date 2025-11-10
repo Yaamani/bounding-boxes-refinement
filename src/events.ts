@@ -9,6 +9,7 @@ import {
   dragStart,
   currentMode,
   drawingBox,
+  selectionBox,
   selectedBoxId,
   resizingBox,
   previousModeForMiddleMouse,
@@ -19,6 +20,7 @@ import {
   setDragStart,
   setCurrentMode,
   setDrawingBox,
+  setSelectionBox,
   setResizingBox,
   setPreviousModeForMiddleMouse,
   setMode,
@@ -28,6 +30,7 @@ import {
   toggleBoxSelection,
   clearBoxSelection,
   getSelectedBoxIds,
+  setSelectedBoxId,
 } from "./state.js";
 import {
   renderCanvas,
@@ -50,6 +53,8 @@ import {
   closeBoxEditor,
   applyBoxEdit,
   updateCoordinateFields,
+  isBoxInsideSelectionBox,
+  isBoxIntersectingSelectionBox,
 } from "./boxes.js";
 import {
   updateUI,
@@ -107,8 +112,15 @@ export function handleCanvasMouseDown(e: MouseEvent) {
         setIsDragging(true);
         setDragStart(mouseX, mouseY);
       } else {
-        clearBoxSelection();
+        // No box clicked - start drawing selection box
+        if (!e.ctrlKey) {
+          // Clear selection only if not holding Ctrl
+          clearBoxSelection();
+        }
         closeBoxEditor();
+        setSelectionBox({ startX: mouseX, startY: mouseY });
+        setIsDragging(true);
+        setDragStart(mouseX, mouseY);
         updateBoxList();
         updateEditorPanel();
         renderCanvas(appState);
@@ -145,6 +157,10 @@ export function handleCanvasMouseMove(e: MouseEvent) {
       const deltaX = mouseX - dragStart.x;
       const deltaY = mouseY - dragStart.y;
       moveBox(selectedBoxId, deltaX, deltaY);
+      setDragStart(mouseX, mouseY);
+      renderCanvas(appState);
+    } else if (currentMode === "select" && selectionBox) {
+      // Update selection box
       setDragStart(mouseX, mouseY);
       renderCanvas(appState);
     } else if (currentMode === "draw") {
@@ -196,6 +212,61 @@ export function handleCanvasMouseUp(e: MouseEvent) {
     }
 
     setDrawingBox(null);
+  }
+
+  // Handle selection box in select mode
+  if (currentMode === "select" && selectionBox) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Convert canvas coordinates to image coordinates
+    if (currentImage) {
+      const imgWidth = currentImage.width * scale;
+      const imgHeight = currentImage.height * scale;
+      const imgX = offsetX + (canvas.width - imgWidth) / 2;
+      const imgY = offsetY + (canvas.height - imgHeight) / 2;
+
+      const canvasX1 = Math.min(selectionBox.startX, mouseX);
+      const canvasY1 = Math.min(selectionBox.startY, mouseY);
+      const canvasX2 = Math.max(selectionBox.startX, mouseX);
+      const canvasY2 = Math.max(selectionBox.startY, mouseY);
+
+      // Convert to image coordinates
+      const imgX1 = (canvasX1 - imgX) / scale;
+      const imgY1 = (canvasY1 - imgY) / scale;
+      const imgX2 = (canvasX2 - imgX) / scale;
+      const imgY2 = (canvasY2 - imgY) / scale;
+
+      // Only process if selection box has reasonable size
+      if (Math.abs(canvasX2 - canvasX1) > 5 && Math.abs(canvasY2 - canvasY1) > 5) {
+        // Clear selection if not holding Ctrl
+        if (!e.ctrlKey) {
+          appState.selectedBoxIds = [];
+        }
+
+        // Find all boxes that intersect with the selection box and add them
+        const imageData = appState.images[appState.currentImageIndex];
+        if (imageData) {
+          for (const box of imageData.boxes) {
+            if (isBoxIntersectingSelectionBox(box, imgX1, imgY1, imgX2, imgY2)) {
+              if (!appState.selectedBoxIds.includes(box.id)) {
+                appState.selectedBoxIds.push(box.id);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    setSelectionBox(null);
+    updateBoxList();
+    if (appState.selectedBoxIds.length === 1) {
+      setSelectedBoxId(appState.selectedBoxIds[0]!);
+      showBoxEditor(appState.selectedBoxIds[0]!);
+    } else {
+      updateEditorPanel();
+    }
   }
 
   setIsDragging(false);
@@ -399,7 +470,6 @@ export async function handleBoxDeleteFromList(boxId: string) {
 
 // Apply box edit instantly on any change
 export function handleInstantBoxEdit() {
-  debugger;
   applyBoxEdit();
   updateBoxList();
   renderCanvas(appState);

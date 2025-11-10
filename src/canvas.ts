@@ -7,6 +7,7 @@ import {
   offsetX,
   offsetY,
   drawingBox,
+  selectionBox,
   dragStart,
   currentMode,
   setOffsetX,
@@ -50,6 +51,17 @@ export function renderCanvas(appState: any) {
     const width = dragStart.x - drawingBox.startX;
     const height = dragStart.y - drawingBox.startY;
     ctx.strokeRect(drawingBox.startX, drawingBox.startY, width, height);
+    ctx.setLineDash([]);
+  }
+
+  // Draw selection box
+  if (selectionBox && currentMode === "select") {
+    ctx.strokeStyle = "#ffaa00";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    const width = dragStart.x - selectionBox.startX;
+    const height = dragStart.y - selectionBox.startY;
+    ctx.strokeRect(selectionBox.startX, selectionBox.startY, width, height);
     ctx.setLineDash([]);
   }
 }

@@ -385,3 +385,44 @@ export function getCollidingBoxes(boxId: string): BoundingBox[] {
 export function hasCollision(boxId: string): boolean {
   return getCollidingBoxes(boxId).length > 0;
 }
+
+// Check if a bounding box is inside a selection box area
+export function isBoxInsideSelectionBox(
+  box: BoundingBox,
+  selectionX1: number,
+  selectionY1: number,
+  selectionX2: number,
+  selectionY2: number
+): boolean {
+  const [x1, y1, x2, y2] = box.coordinate;
+  
+  // Normalize selection coordinates
+  const minSelX = Math.min(selectionX1, selectionX2);
+  const maxSelX = Math.max(selectionX1, selectionX2);
+  const minSelY = Math.min(selectionY1, selectionY2);
+  const maxSelY = Math.max(selectionY1, selectionY2);
+  
+  // Check if box is completely inside selection box
+  return x1 >= minSelX && x2 <= maxSelX && y1 >= minSelY && y2 <= maxSelY;
+}
+
+// Check if a bounding box intersects with a selection box area
+export function isBoxIntersectingSelectionBox(
+  box: BoundingBox,
+  selectionX1: number,
+  selectionY1: number,
+  selectionX2: number,
+  selectionY2: number
+): boolean {
+  const [x1, y1, x2, y2] = box.coordinate;
+  
+  // Normalize selection coordinates
+  const minSelX = Math.min(selectionX1, selectionX2);
+  const maxSelX = Math.max(selectionX1, selectionX2);
+  const minSelY = Math.min(selectionY1, selectionY2);
+  const maxSelY = Math.max(selectionY1, selectionY2);
+  
+  // Check if box intersects (overlaps) with selection box
+  // Two rectangles intersect if they don't completely miss each other
+  return !(x2 < minSelX || x1 > maxSelX || y2 < minSelY || y1 > maxSelY);
+}

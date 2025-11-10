@@ -22,6 +22,7 @@ export let isDragging = false;
 export let dragStart = { x: 0, y: 0 };
 export let currentMode: "select" | "pan" | "draw" = "select";
 export let drawingBox: { startX: number; startY: number } | null = null;
+export let selectionBox: { startX: number; startY: number } | null = null;
 export let selectedBoxId: string | null = null;
 export let resizingBox: { id: string; handle: string } | null = null;
 export let previousModeForMiddleMouse: "select" | "pan" | "draw" | null = null;
@@ -87,6 +88,10 @@ export function setMode(mode: "select" | "pan" | "draw") {
 
 export function setDrawingBox(box: { startX: number; startY: number } | null) {
   drawingBox = box;
+}
+
+export function setSelectionBox(box: { startX: number; startY: number } | null) {
+  selectionBox = box;
 }
 
 export function setSelectedBoxId(id: string | null) {
