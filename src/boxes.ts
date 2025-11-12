@@ -197,6 +197,79 @@ export function createNewBox(coordinate: [number, number, number, number]) {
   setHasUnsavedBoxChanges(true);
 }
 
+// Shrink box by moving edges inward by `amount` image pixels
+export function shrinkBox(boxId: string, amount: number = 4) {
+  if (appState.currentImageIndex < 0 || !currentImage) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  const box = imageData.boxes.find((b) => b.id === boxId);
+  if (!box) return;
+
+  const [x1, y1, x2, y2] = box.coordinate;
+
+  // Move edges inward
+  let nx1 = x1 + amount;
+  let ny1 = y1 + amount;
+  let nx2 = x2 - amount;
+  let ny2 = y2 - amount;
+
+  // Ensure minimum size (at least 1 pixel) and clamp to image bounds
+  const minWidth = 1;
+  const minHeight = 1;
+  if (nx2 - nx1 < minWidth) {
+    const cx = (x1 + x2) / 2;
+    nx1 = cx - minWidth / 2;
+    nx2 = cx + minWidth / 2;
+  }
+  if (ny2 - ny1 < minHeight) {
+    const cy = (y1 + y2) / 2;
+    ny1 = cy - minHeight / 2;
+    ny2 = cy + minHeight / 2;
+  }
+
+  nx1 = Math.max(0, nx1);
+  ny1 = Math.max(0, ny1);
+  nx2 = Math.min(currentImage.width, nx2);
+  ny2 = Math.min(currentImage.height, ny2);
+
+  box.coordinate = [nx1, ny1, nx2, ny2];
+  normalizeBoxCoordinates(box);
+  markAsModified();
+  setHasUnsavedBoxChanges(true);
+}
+
+// Enlarge box by moving edges outward by `amount` image pixels
+export function enlargeBox(boxId: string, amount: number = 4) {
+  if (appState.currentImageIndex < 0 || !currentImage) return;
+
+  const imageData = appState.images[appState.currentImageIndex];
+  if (!imageData) return;
+
+  const box = imageData.boxes.find((b) => b.id === boxId);
+  if (!box) return;
+
+  const [x1, y1, x2, y2] = box.coordinate;
+
+  // Move edges outward
+  let nx1 = x1 - amount;
+  let ny1 = y1 - amount;
+  let nx2 = x2 + amount;
+  let ny2 = y2 + amount;
+
+  // Clamp to image bounds
+  nx1 = Math.max(0, nx1);
+  ny1 = Math.max(0, ny1);
+  nx2 = Math.min(currentImage.width, nx2);
+  ny2 = Math.min(currentImage.height, ny2);
+
+  box.coordinate = [nx1, ny1, nx2, ny2];
+  normalizeBoxCoordinates(box);
+  markAsModified();
+  setHasUnsavedBoxChanges(true);
+}
+
 // Select box
 export function selectBox(boxId: string) {
   if (appState.currentImageIndex < 0) return;
@@ -239,7 +312,7 @@ export async function deleteSelectedBox() {
     !(await showConfirmationModal(
       "Confirm Delete",
       `Are you sure you want to delete the bounding box?\n\nThis action cannot be undone.`,
-      { label: "Delete", class: "btn btn-error" },
+      { label: "Delete", class: "btn btn-error" }
     ))
   ) {
     return;
@@ -395,13 +468,13 @@ export function isBoxInsideSelectionBox(
   selectionY2: number
 ): boolean {
   const [x1, y1, x2, y2] = box.coordinate;
-  
+
   // Normalize selection coordinates
   const minSelX = Math.min(selectionX1, selectionX2);
   const maxSelX = Math.max(selectionX1, selectionX2);
   const minSelY = Math.min(selectionY1, selectionY2);
   const maxSelY = Math.max(selectionY1, selectionY2);
-  
+
   // Check if box is completely inside selection box
   return x1 >= minSelX && x2 <= maxSelX && y1 >= minSelY && y2 <= maxSelY;
 }
@@ -415,13 +488,13 @@ export function isBoxIntersectingSelectionBox(
   selectionY2: number
 ): boolean {
   const [x1, y1, x2, y2] = box.coordinate;
-  
+
   // Normalize selection coordinates
   const minSelX = Math.min(selectionX1, selectionX2);
   const maxSelX = Math.max(selectionX1, selectionX2);
   const minSelY = Math.min(selectionY1, selectionY2);
   const maxSelY = Math.max(selectionY1, selectionY2);
-  
+
   // Check if box intersects (overlaps) with selection box
   // Two rectangles intersect if they don't completely miss each other
   return !(x2 < minSelX || x1 > maxSelX || y2 < minSelY || y1 > maxSelY);

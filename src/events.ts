@@ -55,6 +55,8 @@ import {
   updateCoordinateFields,
   isBoxInsideSelectionBox,
   isBoxIntersectingSelectionBox,
+  shrinkBox,
+  enlargeBox,
 } from "./boxes.js";
 import {
   updateUI,
@@ -239,7 +241,10 @@ export function handleCanvasMouseUp(e: MouseEvent) {
       const imgY2 = (canvasY2 - imgY) / scale;
 
       // Only process if selection box has reasonable size
-      if (Math.abs(canvasX2 - canvasX1) > 5 && Math.abs(canvasY2 - canvasY1) > 5) {
+      if (
+        Math.abs(canvasX2 - canvasX1) > 5 &&
+        Math.abs(canvasY2 - canvasY1) > 5
+      ) {
         // Clear selection if not holding Ctrl
         if (!e.ctrlKey) {
           appState.selectedBoxIds = [];
@@ -249,7 +254,9 @@ export function handleCanvasMouseUp(e: MouseEvent) {
         const imageData = appState.images[appState.currentImageIndex];
         if (imageData) {
           for (const box of imageData.boxes) {
-            if (isBoxIntersectingSelectionBox(box, imgX1, imgY1, imgX2, imgY2)) {
+            if (
+              isBoxIntersectingSelectionBox(box, imgX1, imgY1, imgX2, imgY2)
+            ) {
               if (!appState.selectedBoxIds.includes(box.id)) {
                 appState.selectedBoxIds.push(box.id);
               }
@@ -684,6 +691,36 @@ export async function handleMultiBoxDelete() {
   renderCanvas(appState);
 }
 
+// Handle multi-box shrink operation
+export function handleMultiBoxShrink() {
+  const selectedIds = getSelectedBoxIds();
+  if (selectedIds.length === 0) return;
+
+  // Apply shrink to all selected boxes
+  selectedIds.forEach((boxId) => {
+    shrinkBox(boxId);
+  });
+
+  // Update UI
+  updateBoxList();
+  renderCanvas(appState);
+}
+
+// Handle multi-box enlarge operation
+export function handleMultiBoxEnlarge() {
+  const selectedIds = getSelectedBoxIds();
+  if (selectedIds.length === 0) return;
+
+  // Apply enlarge to all selected boxes
+  selectedIds.forEach((boxId) => {
+    enlargeBox(boxId);
+  });
+
+  // Update UI
+  updateBoxList();
+  renderCanvas(appState);
+}
+
 // Handle multi-box OCR operation
 export async function handleMultiBoxOCR() {
   const selectedIds = getSelectedBoxIds();
@@ -833,6 +870,36 @@ export function setupDelegatedEventListeners() {
       return;
     }
 
+    // Handle shrink button
+    if (
+      target.classList.contains("shrink-btn") ||
+      target.textContent === "➖"
+    ) {
+      e.stopPropagation();
+      const boxId = target.getAttribute("data-box-id");
+      if (boxId) {
+        shrinkBox(boxId);
+        updateBoxList();
+        renderCanvas(appState);
+      }
+      return;
+    }
+
+    // Handle enlarge button
+    if (
+      target.classList.contains("enlarge-btn") ||
+      target.textContent === "➕"
+    ) {
+      e.stopPropagation();
+      const boxId = target.getAttribute("data-box-id");
+      if (boxId) {
+        enlargeBox(boxId);
+        updateBoxList();
+        renderCanvas(appState);
+      }
+      return;
+    }
+
     // Handle edit button
     if (
       target.classList.contains("btn-primary") ||
@@ -914,5 +981,34 @@ export function setupDelegatedEventListeners() {
         }
       });
     }
+  }
+
+  // Multi-box editor buttons
+  const multiRecognizeBtn = document.getElementById("multi-recognize-btn");
+  if (multiRecognizeBtn) {
+    multiRecognizeBtn.addEventListener("click", () => {
+      handleMultiBoxOCR();
+    });
+  }
+
+  const multiDeleteBtn = document.getElementById("multi-delete-btn");
+  if (multiDeleteBtn) {
+    multiDeleteBtn.addEventListener("click", async () => {
+      await handleMultiBoxDelete();
+    });
+  }
+
+  const multiShrinkBtn = document.getElementById("multi-shrink-btn");
+  if (multiShrinkBtn) {
+    multiShrinkBtn.addEventListener("click", () => {
+      handleMultiBoxShrink();
+    });
+  }
+
+  const multiEnlargeBtn = document.getElementById("multi-enlarge-btn");
+  if (multiEnlargeBtn) {
+    multiEnlargeBtn.addEventListener("click", () => {
+      handleMultiBoxEnlarge();
+    });
   }
 }

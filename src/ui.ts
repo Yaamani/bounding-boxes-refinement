@@ -121,15 +121,10 @@ export function updateBoxList() {
     const [x1, y1, x2, y2] = box.coordinate;
     coord.textContent = `(${Math.round(x1)}, ${Math.round(y1)}) - (${Math.round(
       x2
-    )}, ${Math.round(y2)})`;
-
-    const orientation = document.createElement("div");
-    orientation.className = "text-xs opacity-70";
-    orientation.textContent = `Orientation: ${box.orientation}°`;
+    )}, ${Math.round(y2)}) | Orientation: ${box.orientation}°`;
 
     content.appendChild(label);
     content.appendChild(coord);
-    content.appendChild(orientation);
 
     const actionsTop = document.createElement("div");
     actionsTop.className = "flex items-center justify-between mt-3";
@@ -153,7 +148,22 @@ export function updateBoxList() {
     deleteBtn.title = "Delete";
     // Event listener will be handled by delegation in renderer.ts
 
+    // Shrink / Enlarge buttons
+    const shrinkBtn = document.createElement("button");
+    shrinkBtn.className = "btn btn-xs btn-primary shrink-btn";
+    shrinkBtn.setAttribute("data-box-id", box.id);
+    shrinkBtn.textContent = " − ";
+    shrinkBtn.title = "Shrink bounding box";
+
+    const enlargeBtn = document.createElement("button");
+    enlargeBtn.className = "btn btn-xs btn-primary enlarge-btn";
+    enlargeBtn.setAttribute("data-box-id", box.id);
+    enlargeBtn.textContent = "+";
+    enlargeBtn.title = "Enlarge bounding box";
+
     actionsTopButtons.appendChild(editBtn);
+    actionsTopButtons.appendChild(shrinkBtn);
+    actionsTopButtons.appendChild(enlargeBtn);
     actionsTopButtons.appendChild(deleteBtn);
 
     actionsTop.appendChild(actionsTopLabel);
@@ -185,7 +195,7 @@ export function updateBoxList() {
 
     actionsBottomButtons.appendChild(ocrBtn);
     actionsBottomButtons.appendChild(manualOcrBtn);
-
+    
     actionsBottom.appendChild(actionsBottomLabel);
     actionsBottom.appendChild(actionsBottomButtons);
 
