@@ -66,7 +66,7 @@ import {
   showConfirmationModal,
   showAlert,
 } from "./ui.js";
-import { recognizeTextFromImage } from "./ocr.js";
+import { recognizeTextFromImage, recognizeTextFromImages } from "./ocr.js";
 
 // Canvas mouse down handler
 export function handleCanvasMouseDown(e: MouseEvent) {
@@ -750,51 +750,75 @@ export async function performMultiBoxOCR(
   const imageData = appState.images[appState.currentImageIndex];
   if (!imageData || !currentImage) return;
 
-  let successCount = 0;
-  let failCount = 0;
+  try {
+    // Extract all bounding box images
+    const imageBlobs: Blob[] = [];
+    const validBoxIds: string[] = [];
 
-  // Process each box
-  for (const boxId of boxIds) {
-    const box = imageData.boxes.find((b) => b.id === boxId);
-    if (!box) continue;
+    for (const boxId of boxIds) {
+      const box = imageData.boxes.find((b) => b.id === boxId);
+      if (!box) continue;
 
-    try {
-      // Extract the bounding box image
-      const imageBlob = await extractBoundingBoxImage(box);
-      if (!imageBlob) {
-        throw new Error("Failed to extract bounding box image");
+      try {
+        const imageBlob = await extractBoundingBoxImage(box);
+        if (imageBlob) {
+          imageBlobs.push(imageBlob);
+          validBoxIds.push(boxId);
+        }
+      } catch (error) {
+        console.error(`Failed to extract image for box ${boxId}:`, error);
       }
+    }
 
-      // Send to OCR server
-      const ocrResult = await recognizeTextFromImage(imageBlob, orientation);
+    if (imageBlobs.length === 0) {
+      await showAlert("Failed to extract any bounding box images", "OCR Error");
+      return;
+    }
 
-      if (ocrResult) {
-        // Update the box data with recognized text and orientation
+    // Send all images to OCR server in batch
+    const ocrResults = await recognizeTextFromImages(imageBlobs, orientation);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    // Apply results to corresponding boxes
+    for (let i = 0; i < validBoxIds.length; i++) {
+      const boxId = validBoxIds[i];
+      const box = imageData.boxes.find((b) => b.id === boxId);
+      if (!box) continue;
+
+      const ocrResult = ocrResults[i];
+      if (ocrResult && ocrResult.text) {
         box.data = ocrResult.text;
         box.orientation = ocrResult.orientation;
         successCount++;
       } else {
         failCount++;
       }
-    } catch (error) {
-      console.error(`OCR error for box ${boxId}:`, error);
-      failCount++;
     }
+
+    // Mark as modified if any boxes were updated
+    if (successCount > 0) {
+      markAsModified();
+      setHasUnsavedBoxChanges(true);
+
+      // Update UI
+      updateBoxList();
+      renderCanvas(appState);
+    }
+
+    // Show results
+    const message = `OCR Batch Results:\n✅ Success: ${successCount}\n❌ Failed: ${failCount}`;
+    await showAlert(message, "OCR Batch Complete");
+  } catch (error) {
+    console.error("Batch OCR error:", error);
+    await showAlert(
+      `Batch OCR failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }\n\nMake sure the PaddleOCR server is running`,
+      "OCR Error"
+    );
   }
-
-  // Mark as modified if any boxes were updated
-  if (successCount > 0) {
-    markAsModified();
-    setHasUnsavedBoxChanges(true);
-
-    // Update UI
-    updateBoxList();
-    renderCanvas(appState);
-  }
-
-  // Show results
-  const message = `OCR Batch Results:\n✅ Success: ${successCount}\n❌ Failed: ${failCount}`;
-  await showAlert(message, "OCR Batch Complete");
 }
 
 // Setup delegated event listeners for dynamically created elements
