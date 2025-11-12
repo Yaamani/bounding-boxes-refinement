@@ -894,9 +894,19 @@ export function setupDelegatedEventListeners() {
   }
 
   // Multi-box editor buttons
-  const multiRecognizeBtn = document.getElementById("multi-recognize-btn");
-  if (multiRecognizeBtn) {
-    multiRecognizeBtn.addEventListener("click", () => {
+  const multiOcrBtn = document.getElementById("multi-ocr-btn");
+  if (multiOcrBtn) {
+    multiOcrBtn.addEventListener("click", () => {
+      const selectedIds = getSelectedBoxIds();
+      if (selectedIds.length > 0) {
+        performMultiBoxOCR(selectedIds, "auto");
+      }
+    });
+  }
+
+  const multiManualOcrBtn = document.getElementById("multi-manual-ocr-btn");
+  if (multiManualOcrBtn) {
+    multiManualOcrBtn.addEventListener("click", () => {
       handleMultiBoxOCR();
     });
   }

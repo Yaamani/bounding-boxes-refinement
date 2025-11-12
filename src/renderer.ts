@@ -162,9 +162,6 @@ function setupEventListeners() {
   document
     .getElementById("multi-delete-btn")!
     .addEventListener("click", handleMultiBoxDelete);
-  document
-    .getElementById("multi-recognize-btn")!
-    .addEventListener("click", handleMultiBoxOCR);
 
   // Add event listeners for instant updates on box editor inputs
   const boxDataInput = document.getElementById(
