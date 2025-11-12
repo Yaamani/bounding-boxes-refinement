@@ -845,96 +845,6 @@ export function setupDelegatedEventListeners() {
   document.getElementById("box-list")!.addEventListener("click", async (e) => {
     const target = e.target as HTMLElement;
 
-    // Handle OCR button (must check before btn-primary since OCR button has btn-primary class)
-    if (
-      target.classList.contains("ocr-btn") ||
-      target.textContent === "🔤" ||
-      target.textContent === "⏳" ||
-      target.textContent === "✅"
-    ) {
-      e.stopPropagation();
-      const boxId = target.getAttribute("data-box-id");
-      if (boxId) {
-        handleBoxOCR(boxId);
-      }
-      return;
-    }
-
-    // Handle manual OCR button
-    if (target.classList.contains("manual-ocr-btn")) {
-      e.stopPropagation();
-      const boxId = target.getAttribute("data-box-id");
-      if (boxId) {
-        handleBoxManualOCR(boxId);
-      }
-      return;
-    }
-
-    // Handle shrink button
-    if (
-      target.classList.contains("shrink-btn") ||
-      target.textContent === "➖"
-    ) {
-      e.stopPropagation();
-      const boxId = target.getAttribute("data-box-id");
-      if (boxId) {
-        shrinkBox(boxId);
-        updateBoxList();
-        renderCanvas(appState);
-      }
-      return;
-    }
-
-    // Handle enlarge button
-    if (
-      target.classList.contains("enlarge-btn") ||
-      target.textContent === "➕"
-    ) {
-      e.stopPropagation();
-      const boxId = target.getAttribute("data-box-id");
-      if (boxId) {
-        enlargeBox(boxId);
-        updateBoxList();
-        renderCanvas(appState);
-      }
-      return;
-    }
-
-    // Handle edit button
-    if (
-      target.classList.contains("btn-primary") ||
-      target.textContent === "✏️"
-    ) {
-      e.stopPropagation();
-      const card = target.closest(".card");
-      if (card) {
-        const index = Array.from(card.parentElement!.children).indexOf(card);
-        if (index >= 0 && appState.currentImageIndex >= 0) {
-          const imageData = appState.images[appState.currentImageIndex];
-          if (imageData && imageData.boxes[index]) {
-            handleBoxItemClick(imageData.boxes[index].id, e.ctrlKey);
-          }
-        }
-      }
-      return;
-    }
-
-    // Handle delete button
-    if (target.classList.contains("btn-error") || target.textContent === "🗑️") {
-      e.stopPropagation();
-      const card = target.closest(".card");
-      if (card) {
-        const index = Array.from(card.parentElement!.children).indexOf(card);
-        if (index >= 0 && appState.currentImageIndex >= 0) {
-          const imageData = appState.images[appState.currentImageIndex];
-          if (imageData && imageData.boxes[index]) {
-            await handleBoxDeleteFromList(imageData.boxes[index].id);
-          }
-        }
-      }
-      return;
-    }
-
     // Handle card click
     const card = target.closest(".card");
     if (card) {
@@ -1009,6 +919,51 @@ export function setupDelegatedEventListeners() {
   if (multiEnlargeBtn) {
     multiEnlargeBtn.addEventListener("click", () => {
       handleMultiBoxEnlarge();
+    });
+  }
+
+  // Single-box editor buttons
+  const singleOcrBtn = document.getElementById("single-ocr-btn");
+  if (singleOcrBtn) {
+    singleOcrBtn.addEventListener("click", () => {
+      const selectedIds = getSelectedBoxIds();
+      if (selectedIds.length === 1) {
+        handleBoxOCR(selectedIds[0]!);
+      }
+    });
+  }
+
+  const singleManualOcrBtn = document.getElementById("single-manual-ocr-btn");
+  if (singleManualOcrBtn) {
+    singleManualOcrBtn.addEventListener("click", () => {
+      const selectedIds = getSelectedBoxIds();
+      if (selectedIds.length === 1) {
+        handleBoxManualOCR(selectedIds[0]!);
+      }
+    });
+  }
+
+  const singleShrinkBtn = document.getElementById("single-shrink-btn");
+  if (singleShrinkBtn) {
+    singleShrinkBtn.addEventListener("click", () => {
+      handleMultiBoxShrink();
+    });
+  }
+
+  const singleEnlargeBtn = document.getElementById("single-enlarge-btn");
+  if (singleEnlargeBtn) {
+    singleEnlargeBtn.addEventListener("click", () => {
+      handleMultiBoxEnlarge();
+    });
+  }
+
+  const singleDeleteBtn = document.getElementById("single-delete-btn");
+  if (singleDeleteBtn) {
+    singleDeleteBtn.addEventListener("click", async () => {
+      const selectedIds = getSelectedBoxIds();
+      if (selectedIds.length === 1) {
+        await handleBoxDeleteFromList(selectedIds[0]!);
+      }
     });
   }
 }

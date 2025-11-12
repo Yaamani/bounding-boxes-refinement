@@ -402,6 +402,49 @@
                 <option value="270">270° (Rotated Left)</option>
               </select>
             </div>
+            <div class="flex flex-wrap gap-2 mt-4 w-full">
+              <div class="flex flex-row gap-2">
+                <button
+                  id="single-ocr-btn"
+                  class="btn btn-xs btn-primary"
+                  title="Recognize text with OCR"
+                >
+                  🔤 OCR
+                </button>
+                <button
+                  id="single-manual-ocr-btn"
+                  class="btn btn-xs btn-secondary"
+                  title="Recognize text with manual orientation"
+                >
+                  🔤🔧 Manual OCR
+                </button>
+              </div>
+              <div class="flex flex-row gap-2 w-full">
+                <button
+                  id="single-shrink-btn"
+                  class="btn btn-xs btn-primary"
+                  title="Shrink bounding box"
+                >
+                  − Shrink
+                </button>
+                <button
+                  id="single-enlarge-btn"
+                  class="btn btn-xs btn-primary"
+                  title="Enlarge bounding box"
+                >
+                  + Enlarge
+                </button>
+              </div>
+              <div class="flex flex-row-reverse gap-2 w-full">
+                <button
+                  id="single-delete-btn"
+                  class="btn btn-xs btn-error"
+                  title="Delete box"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -459,7 +502,7 @@
               </button>
               <button id="multi-enlarge-btn" class="btn btn-primary grow">
                 Enlarge (+)
-              </>
+              </button>
             </div>
             <button id="multi-delete-btn" class="btn btn-error btn-block">
               <svg
