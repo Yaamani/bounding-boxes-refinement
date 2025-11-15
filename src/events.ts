@@ -397,6 +397,8 @@ export async function handleKeyDown(e: KeyboardEvent) {
     setMode("pan");
   } else if (e.key === "s" && !e.ctrlKey && !e.metaKey) {
     setMode("select");
+  } else if (e.key === "d") {
+    setMode("draw");
   }
 }
 
